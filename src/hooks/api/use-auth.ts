@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { authService, type User } from '~/api-services';
 import type { SignInRequest, SignUpRequest, AuthResponse } from '~/api-services/types';
+import { toast } from 'sonner';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -42,6 +43,7 @@ export function useAuth() {
         setUser(data.user);
         setIsAuthenticated(true);
         queryClient.invalidateQueries({ queryKey: ['auth'] });
+        toast.success('Signed in successfully! Welcome back.');
       } else {
         throw new Error('Invalid response from server');
       }
@@ -50,6 +52,7 @@ export function useAuth() {
       console.error('Sign in failed:', error);
       setIsAuthenticated(false);
       setUser(null);
+      toast.error(error.message || 'Sign in failed. Please check your credentials and try again.');
     },
   });
 
@@ -57,10 +60,12 @@ export function useAuth() {
     mutationFn: authService.signUp.bind(authService),
     onSuccess: (data) => {
       // Handle the response - data is AuthResponse { user, tokens }
+      console.log('data', data);
       if (data && data.user) {
         setUser(data.user);
         setIsAuthenticated(true);
         queryClient.invalidateQueries({ queryKey: ['auth'] });
+        toast.success('Registration successful. Please check your email to verify your account.');
       } else {
         throw new Error('Invalid response from server');
       }
@@ -69,6 +74,7 @@ export function useAuth() {
       console.error('Sign up failed:', error);
       setIsAuthenticated(false);
       setUser(null);
+      toast.error(error.message || 'Sign up failed. Please check your information and try again.');
     },
   });
 
@@ -78,6 +84,10 @@ export function useAuth() {
       setUser(null);
       setIsAuthenticated(false);
       queryClient.clear();
+      toast.success('You have been signed out successfully.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Sign out failed. Please try again.');
     },
   });
 

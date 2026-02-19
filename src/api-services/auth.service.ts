@@ -25,18 +25,23 @@ export class AuthService {
   }
 
   async signUp(userData: SignUpRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/register', userData);
-    
-    // response.data is the AuthResponse { user, tokens }
-    const authData = response.data;
-    
-    // Store tokens in localStorage
-    if (response.success && authData.tokens) {
-      apiClient.setAuthToken(authData.tokens.accessToken);
-      apiClient.setRefreshToken(authData.tokens.refreshToken);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/register', userData);
+      
+      // response.data is the AuthResponse { user, tokens }
+      const authData = response.data;
+      
+      // Store tokens in localStorage
+      if (authData.tokens) {
+        apiClient.setAuthToken(authData.tokens.accessToken);
+        apiClient.setRefreshToken(authData.tokens.refreshToken);
+      }
+      
+      return authData;
+    } catch (error) {
+      // Re-throw the error so it can be handled by the calling function
+      throw error;
     }
-    
-    return authData;
   }
 
   async signOut(): Promise<void> {
