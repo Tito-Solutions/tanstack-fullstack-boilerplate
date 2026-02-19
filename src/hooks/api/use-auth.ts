@@ -32,7 +32,7 @@ export function useAuth() {
         setIsLoading(false);
       }
     };
-
+    
     checkAuth();
   }, []);
 
@@ -85,7 +85,6 @@ export function useAuth() {
       setUser(null);
       setIsAuthenticated(false);
       queryClient.clear();
-      toast.success('You have been signed out successfully.');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Sign out failed. Please try again.');
