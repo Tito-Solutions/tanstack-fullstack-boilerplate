@@ -3,7 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { cn } from "~/lib/utils";
 import { Tooltip } from "~/components/ui/tooltip";
 import type { NavItem } from "~/config/navigation";
-import { useAuth } from "~/hooks/api";
+import { useAuth } from "~/hooks/useAuth";
 import { useProtectedRoute } from "~/hooks/useRouteAuth";
 
 interface SidebarNavItemProps {
@@ -15,15 +15,15 @@ export function SidebarNavItem({ item, isCollapsed }: SidebarNavItemProps) {
   useProtectedRoute();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const navigate = useNavigate(); 
+  const { logout } = useAuth();
   
   const isActive = item.exact 
     ? currentPath === item.href 
     : currentPath.startsWith(item.href);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     navigate({ to: "/" });
   };
 

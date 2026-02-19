@@ -1,10 +1,10 @@
 // In src/hooks/use-route-auth.ts
-import { useAuth } from "~/hooks/api";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 export function useProtectedRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthenticationStore();
   const navigate = useNavigate();
   
   useEffect(() => {

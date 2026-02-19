@@ -1,36 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useAuth } from '~/hooks/api';
+import { useAuth } from '~/hooks/useAuth';
+import { useAuthenticationStore } from '~/store/useAuthenticationStore';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
-import { authService } from '~/api-services';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { signIn, isSigningIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const { login, loginForm, loginFormError, loading, setLoginForm } = useAuth();
+  const { isAuthenticated } = useAuthenticationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     try {
-      await signIn({ email, password });
-      navigate({ to: '/dashboard' });
+      await login();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      console.error('Login failed:', err);
     }
   };
 
   useEffect(() => {
-    if (authService.isAuthenticated()) {
+    if (isAuthenticated) {
       navigate({ to: '/dashboard' });
     }
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 px-4">
@@ -43,19 +39,14 @@ export function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
-                {error}
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={loginForm.email || ''}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                 required
               />
             </div>
@@ -65,15 +56,15 @@ export function LoginPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={loginForm.password || ''}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                 required
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isSigningIn}>
-              {isSigningIn ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
             </Button>
             <div className="text-sm text-muted-foreground text-center">
               Don't have an account?{' '}
