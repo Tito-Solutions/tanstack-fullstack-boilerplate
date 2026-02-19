@@ -61,17 +61,33 @@ class ApiClient {
     );
   }
 
-  private getAuthToken(): string | null {
+  public getAuthToken(): string | null {
     return localStorage.getItem('auth_token');
   }
 
-  private setAuthToken(token: string): void {
+  public setAuthToken(token: string): void {
     localStorage.setItem('auth_token', token);
+  }
+
+  public setRefreshToken(token: string): void {
+    localStorage.setItem('refresh_token', token);
+  }
+
+  public removeAuthToken(): void {
+    localStorage.removeItem('auth_token');
+  }
+
+  public removeRefreshToken(): void {
+    localStorage.removeItem('refresh_token');
+  }
+
+  public getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
   }
 
   private async refreshAuthToken(): Promise<string | null> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = this.getRefreshToken();
       if (!refreshToken) return null;
 
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
@@ -80,6 +96,7 @@ class ApiClient {
 
       const { accessToken } = response.data;
       this.setAuthToken(accessToken);
+      this.setRefreshToken(refreshToken);
       return accessToken;
     } catch {
       return null;

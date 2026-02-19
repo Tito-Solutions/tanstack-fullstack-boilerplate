@@ -20,7 +20,7 @@ export class UserService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>('/auth/me');
+    const response = await apiClient.get<User>('/users/me');
     return response.data;
   }
 

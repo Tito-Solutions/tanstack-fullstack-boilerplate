@@ -15,10 +15,10 @@ export class AuthService {
     // response.data is the AuthResponse { user, tokens }
     const authData = response.data;
     
-    // Store tokens in localStorage
-    if (response.success && authData.tokens) {
-      localStorage.setItem('auth_token', authData.tokens.accessToken);
-      localStorage.setItem('refresh_token', authData.tokens.refreshToken);
+    // Store tokens in localStorage and set them in the apiClient
+    if (authData.tokens) {
+      apiClient.setAuthToken(authData.tokens.accessToken);
+      apiClient.setRefreshToken(authData.tokens.refreshToken);
     }
     
     return authData;
@@ -32,8 +32,8 @@ export class AuthService {
     
     // Store tokens in localStorage
     if (response.success && authData.tokens) {
-      localStorage.setItem('auth_token', authData.tokens.accessToken);
-      localStorage.setItem('refresh_token', authData.tokens.refreshToken);
+      apiClient.setAuthToken(authData.tokens.accessToken);
+      apiClient.setRefreshToken(authData.tokens.refreshToken);
     }
     
     return authData;
@@ -41,11 +41,26 @@ export class AuthService {
 
   async signOut(): Promise<void> {
     try {
-      await apiClient.post('/auth/signout');
+      // Get the refresh token before clearing it
+      const refreshToken = apiClient.getRefreshToken();
+      
+      // Get current user to get userId
+      if (refreshToken && this.isAuthenticated()) {
+        try {
+          const user = await this.getCurrentUser();
+          await apiClient.post('/auth/logout', {
+            userId: user.id,
+            refreshToken: refreshToken
+          });
+        } catch (error) {
+          // If getting user fails, still try to logout with what we have
+          console.warn('Failed to get user for logout:', error);
+        }
+      }
     } finally {
       // Always clear local tokens
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      apiClient.removeAuthToken();
+      apiClient.removeRefreshToken();
     }
   }
 
@@ -59,7 +74,7 @@ export class AuthService {
 
   async refreshToken(): Promise<AuthTokens | null> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = apiClient.getRefreshToken();
       if (!refreshToken) return null;
 
       const response = await apiClient.post<{ tokens: AuthTokens }>('/auth/refresh', {
@@ -67,8 +82,8 @@ export class AuthService {
       });
 
       if (response.success && response.data.tokens) {
-        localStorage.setItem('auth_token', response.data.tokens.accessToken);
-        localStorage.setItem('refresh_token', response.data.tokens.refreshToken);
+        apiClient.setAuthToken(response.data.tokens.accessToken);
+        apiClient.setRefreshToken(response.data.tokens.refreshToken);
         return response.data.tokens;
       }
       
@@ -116,7 +131,7 @@ export class AuthService {
 
   // Get current user
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>('/auth/me');
+    const response = await apiClient.get<User>('/users/me');
     return response.data;
   }
 }
