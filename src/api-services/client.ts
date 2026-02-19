@@ -119,7 +119,7 @@ class ApiClient {
 
   private handleAuthFailure(): void {
     sessionStorageService.clearSession();
-    window.location.href = '/sign-in';
+    window.location.href = '/auth/signin';
   }
 
   private formatError(error: unknown): ApiError {

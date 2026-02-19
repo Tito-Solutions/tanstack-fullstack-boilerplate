@@ -37,7 +37,7 @@ function AppContent() {
   return (
     <>
       {/* Session warning banner */}
-      {showWarning && isSessionValid && (
+      {/* {showWarning && isSessionValid && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-100 dark:bg-yellow-900/20 border-b border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-200 px-4 py-2">
           <div className="container mx-auto flex items-center justify-between">
             <span className="text-sm font-medium">
@@ -45,7 +45,7 @@ function AppContent() {
             </span>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Main app content - add top padding when warning is shown */}
       <div className={showWarning && isSessionValid ? 'pt-10' : ''}>

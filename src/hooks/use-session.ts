@@ -24,7 +24,7 @@ export function useSession(options: UseSessionOptions = {}) {
   const [timeUntilExpiry, setTimeUntilExpiry] = useState<number>(0);
   const [showWarning, setShowWarning] = useState<boolean>(false);
   const warningShownRef = useRef<boolean>(false);
-  const inactivityTimerRef = useRef<NodeJS.Timeout>();
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset inactivity timer
   const resetInactivityTimer = () => {
