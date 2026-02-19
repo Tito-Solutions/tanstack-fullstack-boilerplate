@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
+import { useSession } from './hooks/use-session';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -27,10 +28,37 @@ const queryClient = new QueryClient({
   },
 });
 
+function AppContent() {
+  const { showWarning, timeUntilExpiry, isSessionValid } = useSession({
+    warningThresholdMinutes: 5,
+    inactivityTimeoutMinutes: 30,
+  });
+
+  return (
+    <>
+      {/* Session warning banner */}
+      {showWarning && isSessionValid && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-100 dark:bg-yellow-900/20 border-b border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-200 px-4 py-2">
+          <div className="container mx-auto flex items-center justify-between">
+            <span className="text-sm font-medium">
+              Your session will expire in {Math.ceil(timeUntilExpiry / 60000)} minute{Math.ceil(timeUntilExpiry / 60000) !== 1 ? 's' : ''}. Please save your work.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Main app content - add top padding when warning is shown */}
+      <div className={showWarning && isSessionValid ? 'pt-10' : ''}>
+        <RouterProvider router={router} />
+      </div>
+    </>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <AppContent />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

@@ -22,6 +22,21 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface TokenMetadata {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExp: number;  // Unix timestamp (milliseconds)
+  refreshTokenExp: number; // Unix timestamp (milliseconds)
+  issuedAt: number;        // Unix timestamp (milliseconds)
+}
+
+export interface DecodedToken {
+  exp: number;
+  iat: number;
+  sub: string;
+  [key: string]: any;
+}
+
 export interface SignInRequest {
   email: string;
   password: string;

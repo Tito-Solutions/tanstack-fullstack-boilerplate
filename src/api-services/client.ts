@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiError, ApiResponse } from './types';
+import { sessionStorageService } from './session-storage.service';
+import { TokenUtils } from './token.utils';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -62,50 +64,61 @@ class ApiClient {
   }
 
   public getAuthToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return sessionStorageService.getAccessToken();
   }
 
   public setAuthToken(token: string): void {
-    localStorage.setItem('auth_token', token);
+    sessionStorageService.setAccessToken(token);
   }
 
   public setRefreshToken(token: string): void {
-    localStorage.setItem('refresh_token', token);
+    sessionStorageService.setRefreshToken(token);
   }
 
   public removeAuthToken(): void {
-    localStorage.removeItem('auth_token');
+    sessionStorageService.clearSession();
   }
 
   public removeRefreshToken(): void {
-    localStorage.removeItem('refresh_token');
+    sessionStorageService.clearSession();
   }
 
   public getRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
+    return sessionStorageService.getRefreshToken();
   }
 
   private async refreshAuthToken(): Promise<string | null> {
     try {
-      const refreshToken = this.getRefreshToken();
-      if (!refreshToken) return null;
+      const tokens = sessionStorageService.getTokens();
+      if (!tokens?.refreshToken) return null;
 
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
-        refreshToken,
-      });
+      // Check if refresh token is expired
+      if (TokenUtils.isTokenExpired(tokens.refreshToken)) {
+        this.handleAuthFailure();
+        return null;
+      }
 
-      const { accessToken } = response.data;
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+        { refreshToken: tokens.refreshToken }
+      );
+
+      const { accessToken, refreshToken } = response.data;
+
+      // Store new tokens
+      sessionStorageService.storeTokens({ accessToken, refreshToken });
       this.setAuthToken(accessToken);
       this.setRefreshToken(refreshToken);
+
       return accessToken;
-    } catch {
+    } catch (error) {
+      this.handleAuthFailure();
       return null;
     }
   }
 
   private handleAuthFailure(): void {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
+    sessionStorageService.clearSession();
     window.location.href = '/sign-in';
   }
 

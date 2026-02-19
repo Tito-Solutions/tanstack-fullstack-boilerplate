@@ -8,35 +8,39 @@ import {
   AuthTokens,
   User
 } from './types';
+import { sessionStorageService } from './session-storage.service';
+import { TokenUtils } from './token.utils';
 
 export class AuthService {
   async signIn(credentials: SignInRequest): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
     // response.data is the AuthResponse { user, tokens }
     const authData = response.data;
-    
-    // Store tokens in localStorage and set them in the apiClient
+
+    // Store tokens using SessionStorageService
     if (authData.tokens) {
+      sessionStorageService.storeTokens(authData.tokens);
       apiClient.setAuthToken(authData.tokens.accessToken);
       apiClient.setRefreshToken(authData.tokens.refreshToken);
     }
-    
+
     return authData;
   }
 
   async signUp(userData: SignUpRequest): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/register', userData);
-      
+
       // response.data is the AuthResponse { user, tokens }
       const authData = response.data;
-      
-      // Store tokens in localStorage
+
+      // Store tokens using SessionStorageService
       if (authData.tokens) {
+        sessionStorageService.storeTokens(authData.tokens);
         apiClient.setAuthToken(authData.tokens.accessToken);
         apiClient.setRefreshToken(authData.tokens.refreshToken);
       }
-      
+
       return authData;
     } catch (error) {
       // Re-throw the error so it can be handled by the calling function
@@ -47,8 +51,8 @@ export class AuthService {
   async signOut(): Promise<void> {
     try {
       // Get the refresh token before clearing it
-      const refreshToken = apiClient.getRefreshToken();
-      
+      const refreshToken = sessionStorageService.getRefreshToken();
+
       // Get current user to get userId
       if (refreshToken && this.isAuthenticated()) {
         try {
@@ -63,7 +67,8 @@ export class AuthService {
         }
       }
     } finally {
-      // Always clear local tokens
+      // Always clear session data
+      sessionStorageService.clearSession();
       apiClient.removeAuthToken();
       apiClient.removeRefreshToken();
     }
@@ -114,24 +119,33 @@ export class AuthService {
 
   async handleOAuthCallback(code: string, state: string): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/auth/oauth/callback', { code, state });
-    
-    // Store tokens in localStorage
+
+    // Store tokens using SessionStorageService
     if (response.success && response.data.tokens) {
-      localStorage.setItem('auth_token', response.data.tokens.accessToken);
-      localStorage.setItem('refresh_token', response.data.tokens.refreshToken);
+      sessionStorageService.storeTokens(response.data.tokens);
+      apiClient.setAuthToken(response.data.tokens.accessToken);
+      apiClient.setRefreshToken(response.data.tokens.refreshToken);
     }
-    
+
     return response.data;
   }
 
-  // Check if user is authenticated
+  // Check if user is authenticated with session validation
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('auth_token');
+    return sessionStorageService.isSessionValid();
   }
 
-  // Get current auth token
+  // Get current auth token with validation
   getAuthToken(): string | null {
-    return localStorage.getItem('auth_token');
+    const tokens = sessionStorageService.getTokens();
+    if (!tokens) return null;
+
+    // Return null if token is expired
+    if (TokenUtils.isTokenExpired(tokens.accessToken)) {
+      return null;
+    }
+
+    return tokens.accessToken;
   }
 
   // Get current user

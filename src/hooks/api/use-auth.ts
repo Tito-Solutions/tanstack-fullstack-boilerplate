@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
-import { authService, type User } from '~/api-services';
+import { authService, type User, sessionStorageService } from '~/api-services';
 import type { SignInRequest, SignUpRequest, AuthResponse } from '~/api-services/types';
 import { toast } from 'sonner';
 
@@ -16,7 +16,8 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = authService.isAuthenticated();
+        // Check both authentication and session validity
+        const isAuth = authService.isAuthenticated() && sessionStorageService.isSessionValid();
         setIsAuthenticated(isAuth);
 
         if (isAuth) {
