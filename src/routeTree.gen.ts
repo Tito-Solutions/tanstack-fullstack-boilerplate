@@ -15,6 +15,7 @@ import { Route as DashboardUsersIndexRouteImport } from './routes/dashboard/user
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardProfileIndexRouteImport } from './routes/dashboard/profile/index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
+import { Route as AuthVerifyMfaIndexRouteImport } from './routes/auth/verify-mfa/index'
 import { Route as AuthSignupIndexRouteImport } from './routes/auth/signup/index'
 import { Route as AuthSigninIndexRouteImport } from './routes/auth/signin/index'
 
@@ -48,6 +49,11 @@ const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
   path: '/dashboard/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyMfaIndexRoute = AuthVerifyMfaIndexRouteImport.update({
+  id: '/auth/verify-mfa/',
+  path: '/auth/verify-mfa/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupIndexRoute = AuthSignupIndexRouteImport.update({
   id: '/auth/signup/',
   path: '/auth/signup/',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/auth/signin/': typeof AuthSigninIndexRoute
   '/auth/signup/': typeof AuthSignupIndexRoute
+  '/auth/verify-mfa/': typeof AuthVerifyMfaIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/profile/': typeof DashboardProfileIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/auth/signin': typeof AuthSigninIndexRoute
   '/auth/signup': typeof AuthSignupIndexRoute
+  '/auth/verify-mfa': typeof AuthVerifyMfaIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/profile': typeof DashboardProfileIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/auth/signin/': typeof AuthSigninIndexRoute
   '/auth/signup/': typeof AuthSignupIndexRoute
+  '/auth/verify-mfa/': typeof AuthVerifyMfaIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/profile/': typeof DashboardProfileIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/auth/signin/'
     | '/auth/signup/'
+    | '/auth/verify-mfa/'
     | '/dashboard/analytics/'
     | '/dashboard/profile/'
     | '/dashboard/settings/'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/auth/signin'
     | '/auth/signup'
+    | '/auth/verify-mfa'
     | '/dashboard/analytics'
     | '/dashboard/profile'
     | '/dashboard/settings'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/auth/signin/'
     | '/auth/signup/'
+    | '/auth/verify-mfa/'
     | '/dashboard/analytics/'
     | '/dashboard/profile/'
     | '/dashboard/settings/'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   AuthSigninIndexRoute: typeof AuthSigninIndexRoute
   AuthSignupIndexRoute: typeof AuthSignupIndexRoute
+  AuthVerifyMfaIndexRoute: typeof AuthVerifyMfaIndexRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardProfileIndexRoute: typeof DashboardProfileIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verify-mfa/': {
+      id: '/auth/verify-mfa/'
+      path: '/auth/verify-mfa'
+      fullPath: '/auth/verify-mfa/'
+      preLoaderRoute: typeof AuthVerifyMfaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup/': {
       id: '/auth/signup/'
       path: '/auth/signup'
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   AuthSigninIndexRoute: AuthSigninIndexRoute,
   AuthSignupIndexRoute: AuthSignupIndexRoute,
+  AuthVerifyMfaIndexRoute: AuthVerifyMfaIndexRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardProfileIndexRoute: DashboardProfileIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,

@@ -56,6 +56,12 @@ export const useAuth = (): UseAuthReturn => {
     try {
       const { data } = await $http.post('/auth/login', loginForm)
 
+      if(data.mfaRequired){
+        navigate({ to: '/auth/verify-mfa', search: { data: data } })
+
+        return data
+      }
+
       authenticate(data.data.tokens, data.data.user)
       navigate({ to: '/dashboard' })
       return data

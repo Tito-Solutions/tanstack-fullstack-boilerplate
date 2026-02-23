@@ -13,6 +13,7 @@ interface User {
   role?: string
   role_name?: string
   active_roles?: string[]
+  mfaEnabled?: boolean
 }
 
 interface AuthErrors {
@@ -24,6 +25,7 @@ interface AuthenticationState {
   isAuthenticated: boolean
   accessToken: string | null
   refreshToken: string | null
+  mfaEnabled: boolean
   user: User
   errors: AuthErrors
   activeRole: string
@@ -31,6 +33,7 @@ interface AuthenticationState {
   login: (username: string, password: string) => Promise<void>
   fetchAuthUser: () => Promise<void>
   setProfilePhoto: (userInfo: any) => void
+  setMfaEnabled: (mfaEnabled: boolean) => void
   logout: () => void
   clearError: (key: string) => void
   setActiveRole: (role: string) => void
@@ -42,6 +45,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
       isAuthenticated: false as boolean,
       accessToken: null as string | null,
       refreshToken: null as string | null,
+      mfaEnabled: false as boolean,
       user: {} as User,
       errors: {} as AuthErrors,
       activeRole: '' as string,
@@ -58,6 +62,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
           isAuthenticated: true,
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
+          mfaEnabled: user.mfaEnabled,
           user: {
             id: user.id,
             name: user.firstName + ' ' + user.lastName,
@@ -67,6 +72,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
             role: user.role,
             role_name: user.roleName,
             active_roles: user.activeRoles,
+            mfaEnabled: user.mfaEnabled,
           }
         })
       },
@@ -91,6 +97,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
             const activeRole = get().activeRole
             set({
               isAuthenticated: true,
+              mfaEnabled: data.mfaEnabled,
               user: {
                 id: data.id,
                 name: data.firstName + ' ' + data.lastName,
@@ -100,6 +107,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
                 role: data.role,
                 role_name: data.roleName,
                 active_roles: data.activeRoles,
+                mfaEnabled: data.mfaEnabled,
               }
             })
           }
@@ -118,11 +126,16 @@ export const useAuthenticationStore = create<AuthenticationState>()(
         }))
       },
 
+      setMfaEnabled: (mfaEnabled: boolean) => {
+        set({ mfaEnabled: mfaEnabled })
+      },
+
       logout: () => {
         set({
           isAuthenticated: false,
           accessToken: null,
           refreshToken: null,
+          mfaEnabled: false,
           user: {},
           errors: {}
         })
@@ -147,6 +160,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
         isAuthenticated: state.isAuthenticated,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        mfaEnabled: state.mfaEnabled,
         user: state.user,
         activeRole: state.activeRole
       })

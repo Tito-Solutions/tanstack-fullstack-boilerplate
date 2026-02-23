@@ -6,6 +6,7 @@ import { TextField } from "~/components/ui/TextField";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { UserAvatar } from "~/components/UserAvatar";
 import { ChangePasswordForm } from "~/components/ChangePasswordForm";
+import { MFAToggle } from "~/components/MFAToggle";
 import { useAuth } from '~/hooks/useAuth';
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
@@ -72,6 +73,7 @@ function ProfilePage() {
               <Button>Save Changes</Button>
             </CardFooter>
           </Card>
+          <MFAToggle />
           <ChangePasswordForm />
         </div>
       </div>

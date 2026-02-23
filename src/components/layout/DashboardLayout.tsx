@@ -31,13 +31,13 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
       <Sidebar />
       <div
         className={cn(
-          "transition-all duration-300 ease-in-out",
+          "transition-all duration-300 ease-in-out z-0",
           isCollapsed ? "ml-16" : "ml-64"
         )}
       >
         <Header />
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-          <div className={cn("mx-auto w-full max-w-6xl", className)}>
+          <div className={cn("w-full max-w-6xl", className)}>
             {children}
           </div>
         </main>
