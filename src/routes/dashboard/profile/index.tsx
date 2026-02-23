@@ -1,15 +1,20 @@
-import * as React from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+import { TextField } from "~/components/ui/TextField";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { UserAvatar } from "~/components/UserAvatar";
+import { ChangePasswordForm } from "~/components/ChangePasswordForm";
+import { useAuth } from '~/hooks/useAuth';
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 function ProfilePage() {
-  const [name, setName] = React.useState("John Doe");
-  const [email, setEmail] = React.useState("john.doe@example.com");
+  const [name, setName] = useState("John Doe");
+  const [email, setEmail] = useState("john.doe@example.com");
+
+  const { isAuthenticated, user } = useAuthenticationStore();
+  const { logout, loading } = useAuth();
   
   return (
     <DashboardLayout>
@@ -35,8 +40,8 @@ function ProfilePage() {
               <div className="flex flex-col items-center gap-4 md:flex-row">
                 <UserAvatar 
                   imageUrl={null}
-                  name={name}
-                  email={email}
+                  name={user.name}
+                  email={user.email}
                   size="xl"
                 />
                 <div className="space-y-2">
@@ -48,55 +53,26 @@ function ProfilePage() {
               </div>
               
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input 
-                    id="name" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+                <TextField
+                  id="name"
+                  label="Name"
+                  value={user.name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <TextField
+                  id="email"
+                  label="Email"
+                  type="email"
+                  value={user.email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </CardContent>
             <CardFooter>
               <Button>Save Changes</Button>
             </CardFooter>
           </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>
-                Manage your password and security settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>Update Password</Button>
-            </CardFooter>
-          </Card>
+          <ChangePasswordForm />
         </div>
       </div>
     </DashboardLayout>

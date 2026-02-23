@@ -20,7 +20,8 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useState } from "react";
 import * as React from "react";
 import { cn } from "~/lib/utils";
-import { useAuth } from "~/hooks/api";
+import { useAuth } from '~/hooks/useAuth';
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 
 const dashboardLink = {
@@ -41,17 +42,18 @@ export function Header() {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading, signOut } = useAuth();
+  const { isAuthenticated, user } = useAuthenticationStore();
+  const { logout, loading } = useAuth();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate({ to: "/" });
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="max-w-screen-2xl mx-auto px-8 flex h-14 items-center">
         <div className="mr-4 flex gap-16">
           <Link to="/" className="mr-6 flex items-center space-x-2 group">
@@ -59,7 +61,7 @@ export function Header() {
               <Code className="h-5 w-5 text-primary transition-transform group-hover:scale-110" />
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
-            <span className="hidden font-semibold text-sm sm:inline-block bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
+            <span className="hidden font-semibold text-sm sm:inline-block bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
               Product Expert AI
             </span>
           </Link>
@@ -90,7 +92,7 @@ export function Header() {
                   }`}
                 ></span>
                 <span
-                  className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
+                  className={`absolute inset-0 rounded-lg bg-linear-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
                     currentPath.startsWith("/dashboard")
                       ? "opacity-100"
                       : "opacity-0 group-hover:opacity-100"
@@ -107,7 +109,7 @@ export function Header() {
               >
                 <span className="relative z-10">-</span>
                 <span className="absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 opacity-0 group-hover:opacity-100"></span>
-                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 opacity-0 group-hover:opacity-100"></span>
+                <span className="absolute inset-0 rounded-lg bg-linear-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 opacity-0 group-hover:opacity-100"></span>
               </Link>
             </nav>
           )}
@@ -136,7 +138,7 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Code className="h-6 w-6 text-primary shrink-0" />
-                  <span className="font-semibold text-base bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
+                  <span className="font-semibold text-base bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
                     Product Expert AI
                   </span>
                 </Link>
@@ -178,7 +180,7 @@ export function Header() {
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none"></div>
           <nav className="flex items-center gap-4">
-            {isLoading ? (
+            {loading ? (
               <div className="flex h-9 w-9 items-center justify-center">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
@@ -191,7 +193,7 @@ export function Header() {
                       className="relative h-8 w-8 rounded-full"
                     >
                   <UserAvatar
-                        imageUrl={user?.image || null}
+                        imageUrl={user?.image_url || null} //coming soon
                         name={user?.name || null}
                         email={user?.email || null}
                         size="sm"

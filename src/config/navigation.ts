@@ -20,16 +20,16 @@ export const dashboardNavItems: NavItem[] = [
     href: "/dashboard/analytics",
     icon: BarChart,
   },
-  {
-    title: "Users",
-    href: "/dashboard/users",
-    icon: Users,
-  },
-  {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
+  // {
+  //   title: "Users",
+  //   href: "/dashboard/users",
+  //   icon: Users,
+  // },
+  // {
+  //   title: "Settings",
+  //   href: "/dashboard/settings",
+  //   icon: Settings,
+  // },
   {
     title: "Profile",
     href: "/dashboard/profile",
