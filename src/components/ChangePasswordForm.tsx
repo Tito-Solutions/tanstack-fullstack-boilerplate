@@ -3,6 +3,7 @@ import { TextField } from "./ui/TextField";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { useAxios } from "~/hooks/useAxios";
+import { toast } from "sonner";
 
 interface PasswordForm {
   currentPassword: string | null;
@@ -124,8 +125,16 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
       // if (onSuccess) {
       //   onSuccess();
       // }
-    } catch (error) {
-      console.error('Error updating password:', error);
+    } catch (error: any) {
+      console.log(error.response);
+      if(error.response?.status === 429){
+        toast.error('Too many requests. Please try again later.', {
+          position: 'top-right',
+        })
+        setPasswordFormErrors({ currentPassword: null, newPassword: null, confirmNewPassword: null })
+      }else{
+        setPasswordFormErrors(error.response?.data?.errors || {});
+      }
     }
   };
 

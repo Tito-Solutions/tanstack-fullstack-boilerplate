@@ -28,8 +28,8 @@ export class SessionStorageService {
       issuedAt: Date.now()
     };
 
-    localStorage.setItem(this.TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
+    // localStorage.setItem(this.TOKEN_KEY, tokens.accessToken);
+    // localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
     localStorage.setItem(this.TOKEN_METADATA_KEY, JSON.stringify(metadata));
     localStorage.setItem(this.SESSION_START_KEY, Date.now().toString());
     localStorage.setItem(this.LAST_ACTIVITY_KEY, Date.now().toString());

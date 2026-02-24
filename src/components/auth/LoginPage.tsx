@@ -25,10 +25,10 @@ export function LoginPage() {
 
         return response
       }
-      authenticate(response?.tokens, response?.user);
+      authenticate(response?.data.tokens, response?.data.user);
       navigate({ to: '/dashboard' });
     } catch (err: any) {
-      console.log(err.response);
+      console.log(err);
       if(err.response?.status === 429){
         toast.error('Too many requests. Please try again later.', {
           position: 'top-right',
