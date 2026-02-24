@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '~/hooks/useAuth';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+import { TextField } from '~/components/ui/TextField';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { toast } from 'sonner';
 
 export function CreateAccountPage() {
   const navigate = useNavigate();
-  const { signUp, signUpForm, setSignUpForm, loading } = useAuth();
+  const { signUp, signUpForm, setSignUpForm, loading, signUpFormError, setSignUpFormError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +27,8 @@ export function CreateAccountPage() {
       await signUp();
       navigate({ to: '/dashboard' });
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Sign up failed. Please try again.');
+      // toast.error(err?.response?.data?.message || err?.message || 'Sign up failed. Please try again.');
+      setSignUpFormError(err?.response?.data?.errors || {})
     }
   };
 
@@ -43,63 +43,56 @@ export function CreateAccountPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input
-                id="first_name"
-                type="text"
-                placeholder="John Doe"
-                value={signUpForm.firstName || ''}
-                onChange={(e) => setSignUpForm({ ...signUpForm, firstName: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input
-                id="last_name"
-                type="text"
-                placeholder="Doe"
-                value={signUpForm.lastName || ''}
-                onChange={(e) => setSignUpForm({ ...signUpForm, lastName: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={signUpForm.email || ''}
-                onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={signUpForm.password || ''}
-                onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
-                required
-                minLength={6}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={signUpForm.confirmPassword || ''}
-                onChange={(e) => setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })}
-                required
-                minLength={6}
-              />
-            </div>
+            <TextField
+              id="first_name"
+              label="First Name"
+              type="text"
+              placeholder="John Doe"
+              value={signUpForm?.firstName || ''}
+              error={signUpFormError.firstName}
+              onChange={(e) => setSignUpForm({ ...signUpForm, firstName: e.target.value })}
+            />
+            <TextField
+              id="last_name"
+              label="Last Name"
+              type="text"
+              placeholder="Doe"
+              value={signUpForm?.lastName || ''}
+              error={signUpFormError.lastName}
+              onChange={(e) => setSignUpForm({ ...signUpForm, lastName: e.target.value })}
+            />
+            <TextField
+              id="email"
+              label="Email"
+              type="email"
+              placeholder="name@example.com"
+              value={signUpForm.email || ''}
+              error={signUpFormError?.email}
+              onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
+              required
+            />
+            <TextField
+              id="password"
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={signUpForm.password || ''}
+              error={signUpFormError?.password}
+              onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
+              required
+              minLength={6}
+            />
+            <TextField
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              placeholder="••••••••"
+              value={signUpForm.confirmPassword || ''}
+              error={signUpFormError?.confirmPassword}
+              onChange={(e) => setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })}
+              required
+              minLength={6}
+            />
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>

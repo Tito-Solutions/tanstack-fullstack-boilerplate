@@ -35,12 +35,14 @@ interface UseAuthReturn {
   loginForm: LoginForm
   signUp: () => Promise<SignUpResponse>
   signUpForm: SignUpForm
+  signUpFormError: Record<string, any>
   loginFormError: Record<string, any>
   loading: boolean
   logout: () => Promise<void>
   setLoginForm: React.Dispatch<React.SetStateAction<LoginForm>>
   setLoginFormError: React.Dispatch<React.SetStateAction<Record<string, any>>>
   setSignUpForm: React.Dispatch<React.SetStateAction<SignUpForm>>
+  setSignUpFormError: React.Dispatch<React.SetStateAction<Record<string, any>>>
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -55,6 +57,7 @@ export const useAuth = (): UseAuthReturn => {
   })
   const [signUpForm, setSignUpForm] = useState<SignUpForm>({ firstName: null, lastName: null, email: null, password: null, confirmPassword: null })
   const [loginFormError, setLoginFormError] = useState<Record<string, any>>({})
+  const [signUpFormError, setSignUpFormError] = useState<Record<string, any>>({})
   const { $http } = useAxios()
 
   const login = useCallback(async (): Promise<LoginResponse> => {
@@ -63,15 +66,9 @@ export const useAuth = (): UseAuthReturn => {
       const { data } = await $http.post('/auth/login', loginForm)
       return data
     } catch (error: any) {
-      console.log(error.response.data)
-      if(error.response.statusCode === 429){
-        setLoginFormError({ message: 'Too many requests. Please try again later.' })
-
-        throw error
-      }
-      if(error.response.data.errors) {
+      if(error?.response?.data?.errors) {
         setLoginFormError(error.response.data.errors)
-      } else if (error.response.statusCode === 401) {
+      } else if (error?.response?.statusCode === 401) {
         setLoginFormError({ password: error.response.data.message })
       }
       throw error
@@ -86,6 +83,12 @@ export const useAuth = (): UseAuthReturn => {
       const { data } = await $http.post('/auth/register', signUpForm)
       return data
     } catch (error: any) {
+      if(error?.response?.data?.errors) {
+        setSignUpFormError(error.response.data.errors)
+      }
+      if(error?.response?.statusCode === 401) {
+        setSignUpFormError({ email: error.response.data.message })
+      }
       throw error
     } finally {
       setLoading(false)
@@ -103,12 +106,14 @@ export const useAuth = (): UseAuthReturn => {
     loginForm,
     setLoginFormError,
     signUpForm,
+    signUpFormError,
     signUp,
     loginFormError,
     loading,
     logout,
     setLoginForm,
-    setSignUpForm
+    setSignUpForm,
+    setSignUpFormError
   }
 }
 
