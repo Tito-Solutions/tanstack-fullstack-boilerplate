@@ -144,7 +144,6 @@ export const useAuthenticationStore = create<AuthenticationState>()(
           errors: {}
         })
         Cookies.remove('active_role')
-        window.location.href = '/'
       },
 
       clearError: (key: string) => {

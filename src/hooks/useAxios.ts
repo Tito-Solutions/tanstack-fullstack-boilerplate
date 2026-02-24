@@ -44,10 +44,13 @@ export const useAxios = (): UseAxiosReturn => {
     function (error) {
       // Only redirect if already authenticated and session expires
       // Don't redirect on login failures (401 from /auth/login endpoint)
-      // if (error && error.response && error.response.status === 401 && authStore.isAuthenticated) {
-      //   authStore.logout()
-      //   navigate({ to: '/auth/signin' })
-      // }
+      if (error && error.response && error.response.status === 401 && authStore.isAuthenticated) {
+        toast.error('Your session has expired. Please log in again.', {
+          position: 'top-right',
+        })
+        authStore.logout()
+        navigate({ to: '/auth/signin' })
+      }
       if(error.response?.status === 429){
         toast.error('Too many requests. Please try again later.', {
           position: 'top-right',
