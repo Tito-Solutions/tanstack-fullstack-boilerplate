@@ -54,8 +54,11 @@ export function MFAToggle() {
         setQrCode(null);
       }
     } catch (err: any) {
-      console.error('Error toggling MFA:', err);
-      setError(err.response?.data?.message || 'Failed to update MFA settings. Please try again.');
+      if(err.response.status === 429){
+        setError('Too many requests. Please try again later.');
+      }else{
+        setError(err.response?.data?.message || 'Failed to update MFA settings. Please try again.');
+      }
       // Revert the toggle state on error
       setMfaEnabled(!checked);
     } finally {
@@ -111,9 +114,7 @@ export function MFAToggle() {
       setQrCode(null);
       setMfaCode(['', '', '', '', '', '']);
       setBackupCode(res.data.backupCodes);
-      console.log(res);
     } catch (err: any) {
-      console.error('Error verifying MFA:', err);
       setError(err.response?.data?.message || 'Invalid code. Please try again.');
       // Clear the code inputs on error
       setMfaCode(['', '', '', '', '', '']);

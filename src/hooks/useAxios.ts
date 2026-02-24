@@ -41,7 +41,9 @@ export const useAxios = (): UseAxiosReturn => {
       return response
     },
     function (error) {
-      if (error && error.response && error.response.status === 401) {
+      // Only redirect if already authenticated and session expires
+      // Don't redirect on login failures (401 from /auth/login endpoint)
+      if (error && error.response && error.response.status === 401 && authStore.isAuthenticated) {
         authStore.logout()
         navigate({ to: '/auth/signin' })
       }

@@ -8,11 +8,20 @@ export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
   error?: string;
   inputClassName?: string;
   wrapperClassName?: string;
+  onErrorClear?: () => void;
 }
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ className, label, error, id, required, inputClassName, wrapperClassName, ...props }, ref) => {
+  ({ className, label, error, id, required, inputClassName, wrapperClassName, onChange, onErrorClear, ...props }, ref) => {
     const generatedId = id || React.useId();
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Notify parent to clear error when user starts typing
+      if (error && e.target.value && onErrorClear) {
+        onErrorClear();
+      }
+      onChange?.(e);
+    };
 
     return (
       <div className={cn("space-y-2", wrapperClassName)}>
@@ -26,12 +35,13 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
           ref={ref}
           id={generatedId}
           className={cn(
-            error && "border-red-500 focus:ring-red-500",
+            error && "border-red-500 focus:ring-red-500 mb-0",
             inputClassName,
             className
           )}
           aria-invalid={!!error}
           aria-describedby={error ? `${generatedId}-error` : undefined}
+          onChange={handleChange}
           {...props}
         />
         {error && (

@@ -22,6 +22,7 @@ interface SignUpForm {
 interface LoginResponse {
   tokens: AuthTokens
   user: any
+  mfaRequired: boolean
 }
 
 interface SignUpResponse {
@@ -38,6 +39,7 @@ interface UseAuthReturn {
   loading: boolean
   logout: () => Promise<void>
   setLoginForm: React.Dispatch<React.SetStateAction<LoginForm>>
+  setLoginFormError: React.Dispatch<React.SetStateAction<Record<string, any>>>
   setSignUpForm: React.Dispatch<React.SetStateAction<SignUpForm>>
 }
 
@@ -59,19 +61,18 @@ export const useAuth = (): UseAuthReturn => {
     setLoading(true)
     try {
       const { data } = await $http.post('/auth/login', loginForm)
-
-      if(data.mfaRequired){
-        navigate({ to: '/auth/verify-mfa', search: { data: data } })
-
-        return data
-      }
-
-      authenticate(data.data.tokens, data.data.user)
-      navigate({ to: '/dashboard' })
       return data
     } catch (error: any) {
-      if (error?.response && error?.response.status === 422) {
+      console.log(error.response.data)
+      if(error.response.statusCode === 429){
+        setLoginFormError({ message: 'Too many requests. Please try again later.' })
+
+        throw error
+      }
+      if(error.response.data.errors) {
         setLoginFormError(error.response.data.errors)
+      } else if (error.response.statusCode === 401) {
+        setLoginFormError({ password: error.response.data.message })
       }
       throw error
     } finally {
@@ -100,6 +101,7 @@ export const useAuth = (): UseAuthReturn => {
   return {
     login,
     loginForm,
+    setLoginFormError,
     signUpForm,
     signUp,
     loginFormError,

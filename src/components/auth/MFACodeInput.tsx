@@ -83,7 +83,6 @@ export function MFACodeInput({
        });
       authenticate(data.data.tokens, data.data.user)
       navigate({ to: '/dashboard' })
-      console.log(data);
     } catch (error: any) {
       console.log(error.response.data);
       setError(error.response.data.message);
