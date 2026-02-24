@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import Cookies from 'js-cookie'
 import { useAxios } from '~/hooks/useAxios'
 import { AuthTokens } from '~/api-services/types'
+import { sessionStorageService } from '~/api-services/session-storage.service'
 
 interface User {
   id?: string
@@ -56,8 +57,9 @@ export const useAuthenticationStore = create<AuthenticationState>()(
       },
 
       authenticate: (tokens: AuthTokens, user: any) => {
-        console.log('user', user)
         const activeRole = get().activeRole
+        // Store tokens in session storage for useSession hook
+        sessionStorageService.storeTokens(tokens)
         set({
           isAuthenticated: true,
           accessToken: tokens.accessToken,
@@ -131,6 +133,8 @@ export const useAuthenticationStore = create<AuthenticationState>()(
       },
 
       logout: () => {
+        // Clear session storage
+        sessionStorageService.clearSession()
         set({
           isAuthenticated: false,
           accessToken: null,

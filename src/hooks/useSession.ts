@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAuth } from './api/use-auth';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useAuth } from './useAuth';
 import { sessionStorageService } from '~/api-services/session-storage.service';
 import { TokenUtils } from '~/api-services/token.utils';
 import { toast } from 'sonner';
@@ -20,14 +20,20 @@ export function useSession(options: UseSessionOptions = {}) {
     checkIntervalMs = 60000, // Check every minute
   } = options;
 
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
   const [timeUntilExpiry, setTimeUntilExpiry] = useState<number>(0);
   const [showWarning, setShowWarning] = useState<boolean>(false);
   const warningShownRef = useRef<boolean>(false);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const activityListenersAddedRef = useRef<boolean>(false);
+
+  // Check if user is authenticated
+  const isSessionValid = sessionStorageService.isSessionValid();
 
   // Reset inactivity timer
-  const resetInactivityTimer = () => {
+  const resetInactivityTimer = useCallback(() => {
+    if (!isSessionValid) return;
+
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
@@ -35,16 +41,19 @@ export function useSession(options: UseSessionOptions = {}) {
     inactivityTimerRef.current = setTimeout(() => {
       handleInactivityLogout();
     }, inactivityTimeoutMinutes * 60 * 1000);
-  };
+  }, [isSessionValid, inactivityTimeoutMinutes]);
 
   // Handle inactivity logout
-  const handleInactivityLogout = async () => {
-    toast.error('You have been logged out due to inactivity');
-    await signOut();
-  };
+  const handleInactivityLogout = useCallback(async () => {
+    // Only logout if session is still valid (user hasn't logged out manually)
+    if (sessionStorageService.isSessionValid()) {
+      toast.error('You have been logged out due to inactivity');
+      await logout();
+    }
+  }, [logout]);
 
   // Check token expiration
-  const checkTokenExpiration = () => {
+  const checkTokenExpiration = useCallback(() => {
     const tokens = sessionStorageService.getTokens();
     if (!tokens) return;
 
@@ -73,22 +82,42 @@ export function useSession(options: UseSessionOptions = {}) {
     if (timeUntilExpiry <= 0) {
       handleAutoLogout();
     }
-  };
+  }, [warningThresholdMinutes]);
 
   // Handle automatic logout
-  const handleAutoLogout = async () => {
-    toast.error('Your session has expired. Please sign in again.');
-    await signOut();
-  };
+  const handleAutoLogout = useCallback(async () => {
+    // Only logout if session is still valid
+    if (sessionStorageService.isSessionValid()) {
+      toast.error('Your session has expired. Please sign in again.');
+      await logout();
+    }
+  }, [logout]);
+
+  // Handle activity events
+  const handleActivity = useCallback(() => {
+    if (!isSessionValid) return;
+
+    sessionStorageService.updateLastActivity();
+    resetInactivityTimer();
+  }, [isSessionValid, resetInactivityTimer]);
 
   useEffect(() => {
+    // Only set up activity listeners if user is authenticated
+    if (!isSessionValid) {
+      // Clear any existing timer
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Avoid adding listeners multiple times
+    if (activityListenersAddedRef.current) return;
+    activityListenersAddedRef.current = true;
+
     // Set up activity listeners
     const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-
-    const handleActivity = () => {
-      sessionStorageService.updateLastActivity();
-      resetInactivityTimer();
-    };
 
     activityEvents.forEach(event => {
       window.addEventListener(event, handleActivity);
@@ -105,24 +134,28 @@ export function useSession(options: UseSessionOptions = {}) {
 
     return () => {
       // Cleanup
+      activityListenersAddedRef.current = false;
+
       activityEvents.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
 
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
       }
 
       clearInterval(expirationInterval);
     };
-  }, []);
+  }, [isSessionValid, handleActivity, resetInactivityTimer, checkTokenExpiration, checkIntervalMs]);
 
   return {
     timeUntilExpiry,
     showWarning,
-    isSessionValid: sessionStorageService.isSessionValid(),
+    isSessionValid,
     sessionDuration: sessionStorageService.getSessionDuration(),
     lastActivity: sessionStorageService.getLastActivity(),
+    timeUntilInactivity: Math.max(0, inactivityTimeoutMinutes * 60 * 1000 - (Date.now() - sessionStorageService.getLastActivity())),
   };
 }
 

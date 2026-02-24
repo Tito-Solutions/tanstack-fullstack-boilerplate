@@ -16,6 +16,7 @@ interface SignUpForm {
   lastName: string | null
   email: string | null
   password: string | null
+  confirmPassword: string | null
 }
 
 interface LoginResponse {
@@ -31,11 +32,13 @@ interface SignUpResponse {
 interface UseAuthReturn {
   login: () => Promise<LoginResponse>
   loginForm: LoginForm
-  
+  signUp: () => Promise<SignUpResponse>
+  signUpForm: SignUpForm
   loginFormError: Record<string, any>
   loading: boolean
   logout: () => Promise<void>
   setLoginForm: React.Dispatch<React.SetStateAction<LoginForm>>
+  setSignUpForm: React.Dispatch<React.SetStateAction<SignUpForm>>
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -48,6 +51,7 @@ export const useAuth = (): UseAuthReturn => {
     password: null,
     // token: 'web_token'
   })
+  const [signUpForm, setSignUpForm] = useState<SignUpForm>({ firstName: null, lastName: null, email: null, password: null, confirmPassword: null })
   const [loginFormError, setLoginFormError] = useState<Record<string, any>>({})
   const { $http } = useAxios()
 
@@ -75,15 +79,17 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, [loginForm])
 
-  // const signUp = useCallback(async (): Promise<SignUpResponse> => {
-  //   setLoading(true)
-  //   try {
-  //     const { data } = await $http.post('/auth/register', signUpForm)
-  //     return data
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-  // }, [signUpForm])
+  const signUp = useCallback(async (): Promise<SignUpResponse> => {
+    setLoading(true)
+    try {
+      const { data } = await $http.post('/auth/register', signUpForm)
+      return data
+    } catch (error: any) {
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [signUpForm])
 
   const logout = useCallback(async () => {
     authLogout()
@@ -94,10 +100,13 @@ export const useAuth = (): UseAuthReturn => {
   return {
     login,
     loginForm,
+    signUpForm,
+    signUp,
     loginFormError,
     loading,
     logout,
-    setLoginForm
+    setLoginForm,
+    setSignUpForm
   }
 }
 

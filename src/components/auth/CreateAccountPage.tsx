@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useAuth } from '~/hooks/api';
+import { useAuth } from '~/hooks/useAuth';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -9,28 +9,23 @@ import { toast } from 'sonner';
 
 export function CreateAccountPage() {
   const navigate = useNavigate();
-  const { signUp, isSigningUp } = useAuth();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { signUp, signUpForm, setSignUpForm, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
+    if (signUpForm.password !== signUpForm.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    if (password.length < 6) {
+    if (signUpForm.password && signUpForm.password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
     }
 
     try {
-      await signUp({ firstName, lastName, email, password });
+      await signUp();
       navigate({ to: '/dashboard' });
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || 'Sign up failed. Please try again.');
@@ -54,8 +49,8 @@ export function CreateAccountPage() {
                 id="first_name"
                 type="text"
                 placeholder="John Doe"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                value={signUpForm.firstName || ''}
+                onChange={(e) => setSignUpForm({ ...signUpForm, firstName: e.target.value })}
                 required
               />
             </div>
@@ -65,8 +60,8 @@ export function CreateAccountPage() {
                 id="last_name"
                 type="text"
                 placeholder="Doe"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                value={signUpForm.lastName || ''}
+                onChange={(e) => setSignUpForm({ ...signUpForm, lastName: e.target.value })}
                 required
               />
             </div>
@@ -76,8 +71,8 @@ export function CreateAccountPage() {
                 id="email"
                 type="email"
                 placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={signUpForm.email || ''}
+                onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
                 required
               />
             </div>
@@ -87,8 +82,8 @@ export function CreateAccountPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={signUpForm.password || ''}
+                onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
                 required
                 minLength={6}
               />
@@ -99,16 +94,16 @@ export function CreateAccountPage() {
                 id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={signUpForm.confirmPassword || ''}
+                onChange={(e) => setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })}
                 required
                 minLength={6}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isSigningUp}>
-              {isSigningUp ? 'Creating account...' : 'Create account'}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create account'}
             </Button>
             <div className="text-sm text-muted-foreground text-center">
               Already have an account?{' '}
