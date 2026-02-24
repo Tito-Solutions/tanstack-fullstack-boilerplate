@@ -120,7 +120,6 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     try {
       start();
       const { data } = await $http.patch('/users/change-password', passwordForm);
-      console.log('Password updated successfully:', data);
       
       // Reset form
       setPasswordForm({

@@ -109,3 +109,28 @@ export interface ApiError {
   code?: string;
   details?: unknown;
 }
+
+export interface ColumnDef<T> {
+  key: keyof T;
+  header: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  render?: (value: T[keyof T], item: T) => React.ReactNode;
+}
+
+export interface TableState {
+  page: number;
+  limit: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface TablePagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}

@@ -37,7 +37,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
       >
         <Header />
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-          <div className={cn("w-full max-w-6xl", className)}>
+          <div className={cn("w-full ", className)}>
             {children}
           </div>
         </main>
