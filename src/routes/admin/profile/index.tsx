@@ -124,6 +124,6 @@ function ProfilePage() {
   );
 }
 
-export const Route = createFileRoute("/user/dashboard/profile/")({
+export const Route = createFileRoute("/admin/profile/")({
   component: ProfilePage,
 });

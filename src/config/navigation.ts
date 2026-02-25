@@ -12,7 +12,7 @@ export interface NavItem {
 const commonNavItems = (role: string): NavItem[] => [
   {
     title: "Profile",
-    href: `/${role}/dashboard/profile`,
+    href: `/${role}/profile`,
     icon: User,
   },
   {
@@ -32,7 +32,7 @@ const superAdminNavItems: NavItem[] = [
   },
   {
     title: "Analytics",
-    href: "/super_admin/dashboard/analytics",
+    href: "/super_admin/analytics",
     icon: BarChart,
   },
   ...commonNavItems('super_admin'),

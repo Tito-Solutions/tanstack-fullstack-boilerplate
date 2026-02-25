@@ -51,6 +51,6 @@ function AnalyticsPage() {
   );
 }
 
-export const Route = createFileRoute("/admin/dashboard/analytics/")({
+export const Route = createFileRoute("/super_admin/analytics/")({
   component: AnalyticsPage,
 });

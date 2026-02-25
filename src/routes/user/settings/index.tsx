@@ -102,6 +102,6 @@ function SettingsPage() {
   );
 }
 
-export const Route = createFileRoute("/super_admin/dashboard/settings/")({
+export const Route = createFileRoute("/user/settings/")({
   component: SettingsPage,
 });

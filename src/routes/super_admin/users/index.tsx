@@ -26,6 +26,6 @@ function UsersPage() {
   );
 }
 
-export const Route = createFileRoute("/user/dashboard/users/")({
+export const Route = createFileRoute("/super_admin/users/")({
   component: UsersPage,
 });
