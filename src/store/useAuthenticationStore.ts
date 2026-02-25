@@ -34,6 +34,7 @@ interface AuthenticationState {
   login: (username: string, password: string) => Promise<void>
   fetchAuthUser: () => Promise<void>
   setProfilePhoto: (userInfo: any) => void
+  setUser: (data: any) => void
   setMfaEnabled: (mfaEnabled: boolean) => void
   logout: () => void
   clearError: (key: string) => void
@@ -124,6 +125,18 @@ export const useAuthenticationStore = create<AuthenticationState>()(
             ...state.user,
             profile_photo_path: userInfo.profile_photo_path,
             profile_photo_url: userInfo.profile_photo_url
+          }
+        }))
+      },
+
+      setUser: (data: any) => {
+        set((state) => ({
+          user: {
+            ...state.user,
+            first_name: data.user.firstName,
+            last_name: data.user.lastName,
+            email: data.user.email,
+            name: data.user.firstName + ' ' + data.user.lastName,
           }
         }))
       },

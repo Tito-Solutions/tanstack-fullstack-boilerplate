@@ -7,16 +7,48 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { UserAvatar } from "~/components/UserAvatar";
 import { ChangePasswordForm } from "~/components/ChangePasswordForm";
 import { MFAToggle } from "~/components/MFAToggle";
-import { useAuth } from '~/hooks/useAuth';
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { useLoader } from "~/store/useLoader";
+import {useAxios} from "~/hooks/useAxios";
+import { toast } from "sonner";
+
+interface ProfileForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 function ProfilePage() {
-  const [name, setName] = useState("John Doe");
-  const [email, setEmail] = useState("john.doe@example.com");
+  const { user, setUser } = useAuthenticationStore();
+  const { loading, start, stop } = useLoader();
+  const { $http } = useAxios();
+  const [profileFormErrors, setProfileFormErrors] = useState<Record<string, any>>({});
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    email: user?.email || '',
+  });
 
-  const { isAuthenticated, user } = useAuthenticationStore();
-  const { logout, loading } = useAuth();
-  
+  const handleProfileFormChange = (field: keyof ProfileForm, value: string) => {
+    setProfileForm({ ...profileForm, [field]: value });
+    setProfileFormErrors({ ...profileFormErrors, [field]: null });
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      start();
+      const { data } = await $http.patch(`/users/update`, profileForm);
+      setUser(data);
+      toast.success('Profile updated successfully', {
+        position: 'top-right',
+      });
+    } catch (error: any) {
+      setProfileFormErrors(error.response.data.errors);
+    } finally {
+      stop();
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -54,23 +86,34 @@ function ProfilePage() {
               </div>
               
               <div className="space-y-4">
-                <TextField
-                  id="name"
-                  label="Name"
-                  value={user.name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <div className="grid xl:grid-cols-2 grid-cols-1 gap-4">
+                  <TextField
+                    id="first_name"
+                    label="First Name"
+                    value={profileForm.firstName}
+                    onChange={(e) => handleProfileFormChange('firstName', e.target.value)}
+                    className="flex-1"
+                  />
+                  <TextField
+                    id="last_name"
+                    label="Last Name"
+                    value={profileForm.lastName}
+                    onChange={(e) => handleProfileFormChange('lastName', e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
                 <TextField
                   id="email"
                   label="Email"
                   type="email"
-                  value={user.email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={profileForm.email}
+                  onChange={(e) => handleProfileFormChange('email', e.target.value)}
+                  error={profileFormErrors.email}
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveProfile} disabled={loading}>Save Changes</Button>
             </CardFooter>
           </Card>
           <MFAToggle />
