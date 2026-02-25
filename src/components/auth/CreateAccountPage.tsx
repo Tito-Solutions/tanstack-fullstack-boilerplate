@@ -25,7 +25,7 @@ export function CreateAccountPage() {
 
     try {
       await signUp();
-      navigate({ to: '/dashboard' });
+      navigate({ to: '/user/dashboard' });
     } catch (err: any) {
       // toast.error(err?.response?.data?.message || err?.message || 'Sign up failed. Please try again.');
       setSignUpFormError(err?.response?.data?.errors || {})

@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { useNavigation } from "~/hooks/useNavigation";
 import { SidebarNavItem } from "./SidebarNavItem";
-import { dashboardNavItems } from "~/config/navigation";
+import { useNavigationItems } from "~/config/navigation";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -12,6 +12,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function Sidebar({ className }: SidebarProps) {
   const { isCollapsed, toggleCollapsed } = useNavigation();
+  const navigationItems = useNavigationItems();
 
   return (
     <div
@@ -44,7 +45,7 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
       </div>
       <div className="space-y-1 p-2">
-        {dashboardNavItems.map((item) => (
+        {navigationItems.map((item) => (
           <SidebarNavItem 
             key={item.href} 
             item={item} 

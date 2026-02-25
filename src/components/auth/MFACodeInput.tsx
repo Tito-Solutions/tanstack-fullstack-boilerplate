@@ -82,7 +82,7 @@ export function MFACodeInput({
         method: 'TOTP',
        });
       authenticate(data.data.tokens, data.data.user)
-      navigate({ to: '/dashboard' })
+      navigate({ to: `/${data.data.user.role}/dashboard` })
     } catch (error: any) {
       console.log(error.response.data);
       setError(error.response.data.message);

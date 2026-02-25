@@ -12,7 +12,7 @@ import { TextField } from '../ui/TextField';
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, loginForm, loginFormError, loading, setLoginForm, setLoginFormError } = useAuth();
-  const { isAuthenticated, authenticate } = useAuthenticationStore();
+  const { isAuthenticated, authenticate, user } = useAuthenticationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +26,7 @@ export function LoginPage() {
         return response
       }
       authenticate(response?.data.tokens, response?.data.user);
-      navigate({ to: '/dashboard' });
+      navigate({ to: `/${response?.data.user.role}/dashboard` });
     } catch (err: any) {
       console.log(err);
       if(err.response?.status === 429){
@@ -41,10 +41,10 @@ export function LoginPage() {
 
   // Redirect if already authenticated (e.g., returning user)
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate({ to: '/dashboard' });
+    if (isAuthenticated && user.role) {
+      navigate({ to: `/${user.role}/dashboard` });
     }
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 px-4">
