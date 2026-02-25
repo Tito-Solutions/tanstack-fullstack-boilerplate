@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { useAxios } from "~/hooks/useAxios";
+import { ForbiddenError } from "~/components/ForbiddenError";
 
 function DashboardHome() {
   const { $http } = useAxios();
@@ -15,7 +16,7 @@ function DashboardHome() {
   });
 
   if (isLoading) return <div>Loading dashboard...</div>;
-  if (error) return <div>Failed to load dashboard</div>;
+  if (error) return <ForbiddenError error={error?.response?.data} />;
 
   return (
     <DashboardLayout>
