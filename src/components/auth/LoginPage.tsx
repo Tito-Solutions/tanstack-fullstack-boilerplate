@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useLocation } from '@tanstack/react-router';
 import { useAuth } from '~/hooks/useAuth';
 import { useAuthenticationStore } from '~/store/useAuthenticationStore';
 import { Button } from '~/components/ui/button';
@@ -13,20 +13,23 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { login, loginForm, loginFormError, loading, setLoginForm, setLoginFormError } = useAuth();
   const { isAuthenticated, authenticate, user } = useAuthenticationStore();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.searchStr);
+  const redirectPath = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const response = await login();
-      // Only redirect if login was successful (no mfaRequired)
       if(response?.mfaRequired){
         navigate({ to: '/auth/verify-mfa', search: { data: response } })
-
         return response
       }
-      authenticate(response?.data.tokens, response?.data.user);
-      navigate({ to: `/${response?.data.user.role}/profile` });
+      if (response) {
+        authenticate(response.tokens, response.user);
+        navigate({ to: redirectPath || `/${response.user.role}/profile` });
+      }
     } catch (err: any) {
       console.log(err);
       if(err.response?.status === 429){

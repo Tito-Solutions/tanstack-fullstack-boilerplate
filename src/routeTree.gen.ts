@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as UserUsersIndexRouteImport } from './routes/user/users/index'
@@ -32,6 +33,11 @@ import { Route as AdminProfileIndexRouteImport } from './routes/admin/profile/in
 import { Route as AdminDashboardIndexRouteImport } from './routes/admin/dashboard/index'
 import { Route as AdminAnalyticsIndexRouteImport } from './routes/admin/analytics/index'
 
+const ForbiddenRoute = ForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,9 +49,9 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const UserUsersIndexRoute = UserUsersIndexRouteImport.update({
-  id: '/user/users/',
-  path: '/user/users/',
-  getParentRoute: () => rootRouteImport,
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => UserRouteRoute,
 } as any)
 const UserSettingsIndexRoute = UserSettingsIndexRouteImport.update({
   id: '/user/settings/',
@@ -148,6 +154,7 @@ const AdminAnalyticsIndexRoute = AdminAnalyticsIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/admin/analytics/': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
   '/dashboard': typeof DashboardIndexRoute
   '/admin/analytics': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard': typeof AdminDashboardIndexRoute
@@ -197,6 +205,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/admin/analytics/': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forbidden'
     | '/dashboard/'
     | '/admin/analytics/'
     | '/admin/dashboard/'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forbidden'
     | '/dashboard'
     | '/admin/analytics'
     | '/admin/dashboard'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/forbidden'
     | '/dashboard/'
     | '/admin/analytics/'
     | '/admin/dashboard/'
@@ -296,6 +308,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForbiddenRoute: typeof ForbiddenRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   AdminAnalyticsIndexRoute: typeof AdminAnalyticsIndexRoute
   AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
@@ -316,11 +329,17 @@ export interface RootRouteChildren {
   UserDashboardIndexRoute: typeof UserDashboardIndexRoute
   UserProfileIndexRoute: typeof UserProfileIndexRoute
   UserSettingsIndexRoute: typeof UserSettingsIndexRoute
-  UserUsersIndexRoute: typeof UserUsersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/forbidden': {
+      id: '/forbidden'
+      path: '/forbidden'
+      fullPath: '/forbidden'
+      preLoaderRoute: typeof ForbiddenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -337,10 +356,10 @@ declare module '@tanstack/react-router' {
     }
     '/user/users/': {
       id: '/user/users/'
-      path: '/user/users'
+      path: '/users'
       fullPath: '/user/users/'
       preLoaderRoute: typeof UserUsersIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof UserRouteRoute
     }
     '/user/settings/': {
       id: '/user/settings/'
@@ -480,6 +499,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForbiddenRoute: ForbiddenRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   AdminAnalyticsIndexRoute: AdminAnalyticsIndexRoute,
   AdminDashboardIndexRoute: AdminDashboardIndexRoute,
@@ -500,7 +520,6 @@ const rootRouteChildren: RootRouteChildren = {
   UserDashboardIndexRoute: UserDashboardIndexRoute,
   UserProfileIndexRoute: UserProfileIndexRoute,
   UserSettingsIndexRoute: UserSettingsIndexRoute,
-  UserUsersIndexRoute: UserUsersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

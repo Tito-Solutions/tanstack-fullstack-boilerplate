@@ -6,6 +6,8 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { redirect } from "@tanstack/react-router";
 
 function SettingsPage() {
   const [notifications, setNotifications] = React.useState(true);
@@ -103,5 +105,21 @@ function SettingsPage() {
 }
 
 export const Route = createFileRoute("/super_admin/settings/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (!user.role || user.role !== 'super_admin') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: SettingsPage,
 });

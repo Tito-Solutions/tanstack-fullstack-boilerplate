@@ -81,8 +81,8 @@ export function MFACodeInput({
         code: code,
         method: 'TOTP',
        });
-      authenticate(data.data.tokens, data.data.user)
-      navigate({ to: `/${data.data.user.role}/dashboard` })
+      authenticate(data.tokens, data.user)
+      navigate({ to: `/${data.user.role}/dashboard` })
     } catch (error: any) {
       console.log(error.response.data);
       setError(error.response.data.message);

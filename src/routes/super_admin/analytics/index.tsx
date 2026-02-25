@@ -4,6 +4,8 @@ import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { AnalyticsEventTable } from "~/components/analytics/analytics-event-table";
 import {useAxios} from '~/hooks/useAxios';
 import { useQuery } from "@tanstack/react-query";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { redirect } from "@tanstack/react-router";
 
 function AnalyticsPage() {
   const { $http, fetchData } = useAxios();
@@ -52,5 +54,21 @@ function AnalyticsPage() {
 }
 
 export const Route = createFileRoute("/super_admin/analytics/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (!user.role || user.role !== 'super_admin') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: AnalyticsPage,
 });

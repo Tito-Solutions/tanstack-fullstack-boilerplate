@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { useAxios } from "~/hooks/useAxios";
 import { ForbiddenError } from "~/components/ForbiddenError";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 function DashboardHome() {
   const { $http } = useAxios();
@@ -16,7 +17,7 @@ function DashboardHome() {
   });
 
   if (isLoading) return <div>Loading dashboard...</div>;
-  if (error) return <ForbiddenError error={error?.response?.data} />;
+  if (error) return <ForbiddenError error={(error as any)?.response?.data} />;
 
   return (
     <DashboardLayout>
@@ -44,8 +45,22 @@ function DashboardHome() {
 }
 
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 export const Route = createFileRoute("/super_admin/dashboard/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (user.role !== 'super_admin') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: DashboardHome,
 });

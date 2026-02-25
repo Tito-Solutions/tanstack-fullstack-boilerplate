@@ -16,7 +16,7 @@ function DashboardHome() {
   });
 
   if (isLoading) return <div>Loading dashboard...</div>;
-  if (error) return <ForbiddenError error={error?.response?.data} />;
+  if (error) return <ForbiddenError error={(error as any)?.response?.data} />;
 
   return (
     <DashboardLayout>

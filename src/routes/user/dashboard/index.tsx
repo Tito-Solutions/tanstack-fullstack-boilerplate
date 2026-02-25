@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { useAxios } from "~/hooks/useAxios";
 import { ForbiddenError } from "~/components/ForbiddenError";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { redirect } from "@tanstack/react-router";
 
 function DashboardHome() {
   const { $http } = useAxios();
@@ -44,8 +46,22 @@ function DashboardHome() {
 }
 
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 export const Route = createFileRoute("/user/dashboard/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (!user.role || user.role !== 'user') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: DashboardHome,
 });

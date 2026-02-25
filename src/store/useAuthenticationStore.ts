@@ -82,7 +82,7 @@ export const useAuthenticationStore = create<AuthenticationState>()(
         try {
           const { $http } = useAxios()
           const { data } = await $http.post('/auth/login', { username, password })
-          get().authenticate(data.data.tokens, data.data.user)
+          get().authenticate(data.tokens, data.user)
           window.location.href = `/${data.data.user.role}/dashboard`
         } catch (error: any) {
           set({ errors: error.response?.data || {} })

@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { Button } from "~/components/ui/button";
 import { UserTable } from "~/components/users/user-table";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { redirect } from "@tanstack/react-router";
 
 function UsersPage() {
   return (
@@ -27,5 +29,21 @@ function UsersPage() {
 }
 
 export const Route = createFileRoute("/super_admin/users/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (!user.role || user.role !== 'super_admin') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: UsersPage,
 });

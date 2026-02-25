@@ -11,6 +11,7 @@ import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 import { useLoader } from "~/store/useLoader";
 import {useAxios} from "~/hooks/useAxios";
 import { toast } from "sonner";
+import { redirect } from "@tanstack/react-router";
 
 interface ProfileForm {
   firstName: string;
@@ -125,5 +126,21 @@ function ProfilePage() {
 }
 
 export const Route = createFileRoute("/super_admin/profile/")({
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated, user } = useAuthenticationStore.getState();
+
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/auth/signin',
+        search: { redirect: location.pathname }
+      });
+    }
+
+    if (!user.role || user.role !== 'super_admin') {
+      throw redirect({
+        to: '/forbidden'
+      });
+    }
+  },
   component: ProfilePage,
 });

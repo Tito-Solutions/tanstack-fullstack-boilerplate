@@ -193,7 +193,7 @@ export function Header() {
                       className="relative h-8 w-8 rounded-full"
                     >
                   <UserAvatar
-                        imageUrl={user?.image_url || null} //coming soon
+                        imageUrl={(user as any)?.image_url || null}
                         name={user?.name || null}
                         email={user?.email || null}
                         size="sm"
