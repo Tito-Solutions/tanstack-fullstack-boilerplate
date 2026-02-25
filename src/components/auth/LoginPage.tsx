@@ -28,7 +28,7 @@ export function LoginPage() {
       }
       if (response) {
         authenticate(response.tokens, response.user);
-        navigate({ to: redirectPath || `/${response.user.role}/profile` });
+        navigate({ to: redirectPath || `/${response.user.role}/dashboard` });
       }
     } catch (err: any) {
       console.log(err);
@@ -45,7 +45,7 @@ export function LoginPage() {
   // Redirect if already authenticated (e.g., returning user)
   useEffect(() => {
     if (isAuthenticated && user.role) {
-      navigate({ to: `/${user.role}/profile` });
+      navigate({ to: `/${user.role}/dashboard` });
     }
   }, []);
 
