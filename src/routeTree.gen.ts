@@ -49,9 +49,9 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const UserUsersIndexRoute = UserUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => UserRouteRoute,
+  id: '/user/users/',
+  path: '/user/users/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const UserSettingsIndexRoute = UserSettingsIndexRouteImport.update({
   id: '/user/settings/',
@@ -329,6 +329,7 @@ export interface RootRouteChildren {
   UserDashboardIndexRoute: typeof UserDashboardIndexRoute
   UserProfileIndexRoute: typeof UserProfileIndexRoute
   UserSettingsIndexRoute: typeof UserSettingsIndexRoute
+  UserUsersIndexRoute: typeof UserUsersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -356,10 +357,10 @@ declare module '@tanstack/react-router' {
     }
     '/user/users/': {
       id: '/user/users/'
-      path: '/users'
+      path: '/user/users'
       fullPath: '/user/users/'
       preLoaderRoute: typeof UserUsersIndexRouteImport
-      parentRoute: typeof UserRouteRoute
+      parentRoute: typeof rootRouteImport
     }
     '/user/settings/': {
       id: '/user/settings/'
@@ -520,6 +521,7 @@ const rootRouteChildren: RootRouteChildren = {
   UserDashboardIndexRoute: UserDashboardIndexRoute,
   UserProfileIndexRoute: UserProfileIndexRoute,
   UserSettingsIndexRoute: UserSettingsIndexRoute,
+  UserUsersIndexRoute: UserUsersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

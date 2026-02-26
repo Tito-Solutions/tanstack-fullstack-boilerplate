@@ -4,6 +4,7 @@ import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { useAxios } from "~/hooks/useAxios";
 import { ForbiddenError } from "~/components/ForbiddenError";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { AnalyticsEventTable } from "~/components/analytics/analytics-event-table";
 
 function DashboardHome() {
   const { $http } = useAxios();
@@ -38,6 +39,25 @@ function DashboardHome() {
             <div className="text-2xl font-bold">{data?.data.auth.failureRate}</div>
             <div className="text-sm text-muted-foreground">Failure Rate</div>
           </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.pages.totalVisits}</div>
+            <div className="text-sm text-muted-foreground">Total Visits</div>
+          </div>
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.pages.uniqueUsers}</div>
+            <div className="text-sm text-muted-foreground">Unique Users</div>
+          </div>
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.pages.avgResponseTime}</div>
+            <div className="text-sm text-muted-foreground">Average Response Time</div>
+          </div>
+        </div>
+        {/* datatable */}
+        
+        <div>
+          <AnalyticsEventTable />
         </div>
       </div>
     </DashboardLayout>

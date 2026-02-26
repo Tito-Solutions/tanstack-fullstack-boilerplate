@@ -38,6 +38,7 @@ interface AuthenticationState {
   logout: () => void
   clearError: (key: string) => void
   setActiveRole: (role: string) => void
+  setTokens: (accessToken: string, refreshToken: string) => void
 }
 
 export const useAuthenticationStore = create<AuthenticationState>()(
@@ -50,6 +51,10 @@ export const useAuthenticationStore = create<AuthenticationState>()(
       user: {} as User,
       errors: {} as AuthErrors,
       activeRole: '' as string,
+
+      setTokens: (accessToken: string, refreshToken: string) => {
+        set({ accessToken: accessToken, refreshToken: refreshToken })
+      },
 
       setActiveRole: (role: string) => {
         set({ activeRole: role })
