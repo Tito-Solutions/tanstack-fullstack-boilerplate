@@ -30,11 +30,11 @@ const superAdminNavItems: NavItem[] = [
     icon: LayoutDashboard,
     exact: true,
   },
-  {
-    title: "Analytics",
-    href: "/super_admin/analytics",
-    icon: BarChart,
-  },
+  // {
+  //   title: "Analytics",
+  //   href: "/super_admin/analytics",
+  //   icon: BarChart,
+  // },
   ...commonNavItems('super_admin'),
 ]
 

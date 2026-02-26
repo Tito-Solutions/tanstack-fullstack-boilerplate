@@ -2,64 +2,56 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { DashboardLayout } from "~/components/layout/DashboardLayout";
 import { useAxios } from "~/hooks/useAxios";
-import { ForbiddenError } from "~/components/ForbiddenError";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
-import { AnalyticsEventTable } from "~/components/analytics/analytics-event-table";
+import { DateRange, WebAnalytics } from "~/components/analytics";
+import { useState } from "react";
 
 function DashboardHome() {
   const { $http } = useAxios();
 
+  const [range, setRange] = useState<DateRange>('week');
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['analytics'],
+    queryKey: ['analytics-dashboard', range],
     queryFn: async () => {
-      const res = await $http.get('/activity/dashboard');
+      const res = await $http.get('/activity/dashboard', {
+        params: { range },
+      });
       return res.data;
     },
   });
 
-  if (isLoading) return <div>Loading dashboard...</div>;
-  if (error) return <ForbiddenError error={(error as any)?.response?.data} />;
+  const pages = data?.data?.chartData?.pages; 
+  const labels = Array.isArray(pages?.labels) ? pages.labels : []; 
+  const values = Array.isArray(pages?.datasets?.[0]?.data) ? pages.datasets[0].data : []; 
+  const chartData = labels.map((date: string, i: number) => ({ date, count: values[i] ?? 0, }));
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome to Your Dashboard
-        </h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.auth.totalLogins}</div>
-            <div className="text-sm text-muted-foreground">Total Logins</div>
-          </div>
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.auth.failedLogins}</div>
-            <div className="text-sm text-muted-foreground">Failed Logins</div>
-          </div>
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.auth.failureRate}</div>
-            <div className="text-sm text-muted-foreground">Failure Rate</div>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.pages.totalVisits}</div>
-            <div className="text-sm text-muted-foreground">Total Visits</div>
-          </div>
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.pages.uniqueUsers}</div>
-            <div className="text-sm text-muted-foreground">Unique Users</div>
-          </div>
-          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-            <div className="text-2xl font-bold">{data?.data.pages.avgResponseTime}</div>
-            <div className="text-sm text-muted-foreground">Average Response Time</div>
-          </div>
-        </div>
-        {/* datatable */}
-        
-        <div>
-          <AnalyticsEventTable />
-        </div>
-      </div>
+      <WebAnalytics
+        title="Route Endpoint Analytics"
+        status="Online"
+        showAlert={false}
+        chartData={chartData}
+        topPages={data?.data?.pageSummary?.topPages}
+        onDateRangeChange={(newRange: DateRange) => {
+          setRange(newRange); // 🔥 THIS triggers refetch automatically
+        }}
+        metrics={{
+          uniqueVisitors: {
+            value: data?.data?.pageSummary?.uniqueUsers,
+            label: "Unique Users",
+          },
+          totalVisits: {
+            value: data?.data?.pageSummary?.totalVisits,
+            label: "Total Route Usage",
+          },
+          avgResponseTime: {
+            value: data?.data?.pageSummary?.avgResponseTime,
+            label: "Average Response Time",
+          },
+        }}
+      />
     </DashboardLayout>
   );
 }
