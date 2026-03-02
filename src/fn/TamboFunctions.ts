@@ -2,6 +2,7 @@ import { TamboTool } from "@tambo-ai/react";
 import { z } from "zod";
 import { http } from "~/hooks/api/http";
 import { ProfileForm } from "~/components/ProfileInformationCard";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 interface GetDashboardAnalyticsInput {
   range: 'week' | 'month' | 'quarter' | 'year';
@@ -48,6 +49,7 @@ export const MetricsDataTool: TamboTool = {
 
 async function updateProfileForm(input: ProfileForm) {
   const res = await http.patch("/users/update", input);
+  useAuthenticationStore.getState().setUser(res.data);
   
   return res;
 }

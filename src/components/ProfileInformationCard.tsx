@@ -41,7 +41,11 @@ export function ProfileInformationCard() {
   };
 
   useEffect(() => {
-    console.log(user);
+    setProfileForm({
+      firstName: user?.first_name || '',
+      lastName: user?.last_name || '',
+      email: user?.email || '',
+    });
   }, [user]);
 
   const handleSaveProfile = async () => {

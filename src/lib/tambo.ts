@@ -73,7 +73,7 @@ export const components: TamboComponent[] = [
   },
   {
     name: 'ProfileInformationCard',
-    description: 'Profile Page',
+    description: 'Profile Page use the tool to update the profile information',
     component: InteractableProfileInformationCard,
     propsSchema: ProfileInformationCardPropsSchema,
   },
