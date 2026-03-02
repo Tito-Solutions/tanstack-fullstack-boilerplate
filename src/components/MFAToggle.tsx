@@ -6,6 +6,12 @@ import { useAxios } from "~/hooks/useAxios";
 import { Alert, AlertDescription } from "./ui/alert";
 import { useLocalStorage } from "~/hooks/useLocalStorage";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { z } from "zod";
+
+export const MFAToggleSchema = z.object({
+  mfaEnabled: z.boolean().optional(),
+})
+export type MFAToggle = z.infer<typeof MFAToggleSchema>;
 
 export function MFAToggle() {
   const { $http } = useAxios();
