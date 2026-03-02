@@ -5,19 +5,44 @@ import { z } from "zod";
  * Single metric schema
  */
 export const MetricSchema = z.object({
+  totalVisits: z.object({
+  value: z.number(),
   label: z.string(),
-  value: z.string().or(z.number()),
+  }),
+  uniqueVisitors: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
+  avgResponseTime: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
+  totalLogins: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
+  failedLogins: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
+  failureRate: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
+  successRate: z.object({
+    value: z.number(),
+    label: z.string(),
+  }),
 });
 
 /**
  * API response is an object with dynamic keys
  */
-export const MetricsResponseSchema = z.record(MetricSchema);
 
-export type MetricsResponse = z.infer<typeof MetricsResponseSchema>;
+export type MetricCard = z.infer<typeof MetricSchema>;
 
 export interface MetricCardProps {
-  data?: MetricsResponse; // <-- accept raw API object
+  data?: MetricCard; // <-- accept raw API object
 }
 
 export function MetricCard({ data }: MetricCardProps) {
@@ -27,7 +52,8 @@ export function MetricCard({ data }: MetricCardProps) {
   const metrics = Object.values(data);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-4">
+    <div className="grid gap-4 lg:grid-cols-4 md:grid-cols-1">
+      {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
       {metrics.map((metric, index) => (
         <Card key={index}>
           <CardContent className="pt-6">

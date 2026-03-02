@@ -24,35 +24,10 @@ export const useAxios = (): UseAxiosReturn => {
 
   // Add a request interceptor
   $http.interceptors.request.use(
-    function (config) {
+    async function (config) {
       const token = authStore.accessToken
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
-      }
-
-      return config
-    },
-    function (error) {
-      return Promise.reject(error)
-    }
-  )
-
-  $http.interceptors.response.use(
-    function (response) {
-      return response
-    },
-    async function (error) {
-      const originalRequest = error.config
-
-      // Handle expired access tokens with refresh flow
-      if (
-        error?.response?.status === 401 &&
-        authStore.refreshToken &&
-        !(originalRequest as any)?._retry &&
-        !originalRequest?.url?.includes('/auth/login') &&
-        !originalRequest?.url?.includes('/auth/refresh')
-      ) {
-        ;(originalRequest as any)._retry = true
 
         try {
           const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
@@ -65,24 +40,31 @@ export const useAxios = (): UseAxiosReturn => {
               Authorization: `Bearer ${authStore.accessToken}`
             }
           })
-
+  
           const { accessToken, refreshToken } = refreshResponse.data || {}
-
+  
           if (accessToken && refreshToken) {
             authStore.setTokens(accessToken, refreshToken)
-
-            originalRequest.headers = {
-              ...(originalRequest.headers || {}),
-              Authorization: `Bearer ${accessToken}`
-            }
-
-            return $http(originalRequest)
           }
         } catch (refreshError: any) {
           // If refresh fails, fall through to logout handling below
           console.log('Refresh token request failed:', refreshError?.response || refreshError)
         }
       }
+
+
+      return config
+    },
+    function (error) {
+      return Promise.reject(error)
+    }
+  )
+
+  $http.interceptors.response.use(
+    function (response) {
+      return response
+    },
+    function (error) {
 
       // Only redirect if already authenticated and session expires or refresh fails
       // Don't redirect on login failures (401 from /auth/login endpoint)

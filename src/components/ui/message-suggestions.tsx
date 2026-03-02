@@ -147,7 +147,7 @@ const MessageSuggestions = React.forwardRef<
     // Find the last AI message
     const lastAiMessage =
       messages.length > 0
-        ? (messages.toReversed().find((msg) => msg.role === "assistant") ??
+        ? (messages.reverse().find((msg) => msg.role === "assistant") ??
           null)
         : null;
 
@@ -173,27 +173,35 @@ const MessageSuggestions = React.forwardRef<
     // Handle keyboard shortcuts for selecting suggestions
     useEffect(() => {
       if (!suggestions || suggestions.length === 0) return;
-
+    
+      const normalizeForAccept = (s: any) => ({
+        ...s,
+        detailedSuggestion: s.detailedSuggestion ?? s.content ?? s.description ?? "",
+      });
+    
       const handleKeyDown = (event: KeyboardEvent) => {
         const modifierPressed = isMac
           ? event.metaKey && event.altKey
           : event.ctrlKey && event.altKey;
-
-        if (modifierPressed) {
-          const keyNum = parseInt(event.key);
-          if (!isNaN(keyNum) && keyNum > 0 && keyNum <= suggestions.length) {
-            event.preventDefault();
-            const suggestionIndex = keyNum - 1;
-            void accept({ suggestion: suggestions[suggestionIndex] });
-          }
-        }
+    
+        if (!modifierPressed) return;
+    
+        const keyNum = Number.parseInt(event.key, 10);
+        if (Number.isNaN(keyNum)) return;
+    
+        const suggestionIndex = keyNum - 1;
+        if (suggestionIndex < 0 || suggestionIndex >= suggestions.length) return;
+    
+        event.preventDefault();
+    
+        const suggestion = normalizeForAccept(suggestions[suggestionIndex]);
+        if (!suggestion.detailedSuggestion.trim()) return;
+    
+        void accept({ suggestion, shouldSubmit: false }); // draft mode
       };
-
-      document.addEventListener("keydown", handleKeyDown);
-
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
+    
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
     }, [suggestions, accept, isMac]);
 
     // If we have no messages yet and no initial suggestions, render nothing
@@ -333,8 +341,23 @@ const MessageSuggestionsList = React.forwardRef<
                     isSelected: selectedSuggestionId === suggestion.id,
                   }),
                 )}
-                onClick={async () =>
-                  !isGenerating && (await accept({ suggestion }))
+                onClick={async () => {
+                  if (isGenerating) return;
+
+                  // Adapt your suggestion shape to what accept() expects
+                  const suggestionForAccept = {
+                    ...suggestion,
+                    detailedSuggestion:
+                      (suggestion as any).detailedSuggestion ??
+                      (suggestion as any).content ??
+                      (suggestion as any).description ?? "",
+                  };
+
+                  if (!suggestionForAccept.detailedSuggestion.trim()) return;
+
+                  await accept({ suggestion: suggestionForAccept as any}); // draft mode
+                  // !isGenerating && (await accept({ suggestion }))
+                }
                 }
                 disabled={isGenerating}
                 data-suggestion-id={suggestion.id}

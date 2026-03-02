@@ -9,7 +9,7 @@ import {
 import { Calendar } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { z } from "zod";
-import { MetricCard } from "~/components/analytics/MetricCard";
+import { MetricCard, MetricCardProps } from "~/components/analytics/MetricCard";
 import { WebAnalyticsChartCard } from "~/components/analytics/WebAnalyticsChartCard";
 import { WebAnalyticsRoutesTable } from "~/components/analytics/WebAnalyticsRoutesTable";
 
@@ -23,9 +23,34 @@ export const WebAnalyticsSchema = z.object({
   status: z.string().optional(),
   dateRange: z.string().optional(),
   metrics: z.object({
-    uniqueVisitors: z.number(),
-    totalVisits: z.number(),
-    avgResponseTime: z.number(),
+    totalVisits: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    uniqueVisitors: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    avgResponseTime: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    totalLogins: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    failedLogins: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    failureRate: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
+    successRate: z.object({
+      value: z.number(),
+      label: z.string(),
+    }),
   }),
   chartData: z.array(z.object({
     date: z.string(),
@@ -57,7 +82,7 @@ export interface WebAnalyticsProps {
   /** Date range filter value */
   dateRange?: DateRange;
   /** Metric cards: uniqueVisitors, page views, bounce rate */
-  metrics?: MetricCard[];
+  metrics?: MetricCardProps;
   /** Chart time series data */
   chartData?: WebAnalyticsChartPoint[];
   /** Top pages with visitor counts */
@@ -111,7 +136,7 @@ export function WebAnalytics({
       </div>
 
       {/* Metric cards */}
-      <MetricCard data={metrics} />
+      <MetricCard data={metrics as any} />
 
       <WebAnalyticsChartCard data={chartData} />
       <WebAnalyticsRoutesTable

@@ -73,19 +73,19 @@ export const components: TamboComponent[] = [
   },
   {
     name: 'ProfileInformationCard',
-    description: 'Profile Page use the tool to update the profile information',
+    description: 'Profile Page use the tool update_profile_form to update the profile information',
     component: InteractableProfileInformationCard,
     propsSchema: ProfileInformationCardPropsSchema,
   },
   {
     name: 'DashboardMetricCard',
-    description: 'Dashboard Metric Card',
+    description: 'Dashboard Metric Card use the tool get_dashboard_analytics to get data',
     component: MetricCard,
     propsSchema: MetricSchema,
   },
   {
     name: 'DashboardChartCard',
-    description: 'Dashboard Chart Card',
+    description: 'Dashboard Chart Card use the tool get_dashboard_analytics',
     component: WebAnalyticsChartCard,
     propsSchema: WebAnalyticsChartCardSchema,
   },

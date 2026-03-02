@@ -3,6 +3,7 @@ import { z } from "zod";
 import { http } from "~/hooks/api/http";
 import { ProfileForm } from "~/components/ProfileInformationCard";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { useAxios } from "~/hooks/useAxios";
 
 interface GetDashboardAnalyticsInput {
   range: 'week' | 'month' | 'quarter' | 'year';
@@ -30,16 +31,12 @@ async function getMetricsData(input: GetDashboardAnalyticsInput) {
       params: { range: input.range },
     });
     const data = res.data.data;
-    return [
-      {value: data.pageSummary.uniqueUsers, label: 'Unique Users'},
-      {value: data.pageSummary.totalVisits, label: 'Total Route Usage'},
-      {value: data.pageSummary.avgResponseTime, label: 'Average Response Time'},
-    ];
+    return data.metrics;
   }
 
 export const MetricsDataTool: TamboTool = {
   name: "get_metrics_data",
-  description: "Get the metrics data",
+  description: "Get the dashboard metrics data",
   tool: getMetricsData,
   inputSchema: z.object({
     range: z.enum(['week', 'month', 'quarter', 'year']).describe("The range of the analytics data"),
@@ -48,20 +45,24 @@ export const MetricsDataTool: TamboTool = {
 };
 
 async function updateProfileForm(input: ProfileForm) {
-  const res = await http.patch("/users/update", input);
-  useAuthenticationStore.getState().setUser(res.data);
-  
-  return res;
+  try {
+    const res = await http.patch("/users/update", input);
+    useAuthenticationStore.getState().setUser(res.data);
+    
+    return res;
+  } catch (error: any) {
+    return error.response.data;
+  }
 }
 
 export const UpdateProfileFormTool: TamboTool = {
   name: "update_profile_form",
-  description: "Update the profile form",
+  description: "Update the profile first_name, last_name, email. email should be required",
   tool: updateProfileForm,
   inputSchema: z.object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    email: z.string().optional(),
+    email: z.string().min(1, { message: "Email is required" }),
   }),
   outputSchema: z.any(),
 };

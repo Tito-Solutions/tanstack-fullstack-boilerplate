@@ -21,6 +21,7 @@ import NProgress from "nprogress";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 import "nprogress/nprogress.css";
 import { DashboardAnalyticsTool, MetricsDataTool, UpdateProfileFormTool } from "~/fn/TamboFunctions";
+import { tools } from "~/lib/tambo.tools";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -110,7 +111,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <TamboProvider
           apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
           components={components}
-          userKey={import.meta.env.VITE_TAMBO_USER_KEY ?? ""}
+          userKey={authStore.user.id ?? ""}
           tools={[DashboardAnalyticsTool, MetricsDataTool, UpdateProfileFormTool]}
         >
           <div className="min-h-screen bg-background">
