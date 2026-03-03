@@ -16,6 +16,9 @@ import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+import { TamboProvider } from "@tambo-ai/react";
+import { components } from "@/lib/tambo";
+import { MessageThreadPanel } from "@/components/ui/message-thread-panel";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -101,6 +104,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <>
       <HeadContent />
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <TamboProvider
+          apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
+          components={components}
+        >
+          {/* Tambo components */}
+          <MessageThreadPanel />
+          {/* other Tambo components */}
+        </TamboProvider>
         <div className="min-h-screen bg-background">
           {/* <Header /> */}
           <main>{children}</main>
