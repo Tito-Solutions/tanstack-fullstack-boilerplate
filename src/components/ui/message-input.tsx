@@ -366,36 +366,35 @@ const McpPromptEffect: React.FC<McpPromptEffectProps> = ({
   setValue,
   onComplete,
 }) => {
-  React.useEffect(() => {
-    if (selectedMcpPromptData && selectedMcpPromptName) {
-      const promptMessages = selectedMcpPromptData?.messages;
-      if (promptMessages) {
-        const promptText = promptMessages
-          .map((msg) => {
-            if (msg.content?.type === "text") {
-              return msg.content.text;
-            }
-            return "";
-          })
-          .filter(Boolean)
-          .join("\n");
+  const setValueRef = React.useRef(setValue);
+  const onCompleteRef = React.useRef(onComplete);
+  setValueRef.current = setValue;
+  onCompleteRef.current = onComplete;
 
-        const editor = editorRef.current;
-        if (editor) {
-          editor.setContent(promptText);
-          setValue(promptText);
-          editor.focus("end");
-        }
+  React.useEffect(() => {
+    if (!selectedMcpPromptData || !selectedMcpPromptName) return;
+
+    const promptMessages = selectedMcpPromptData?.messages;
+    if (promptMessages) {
+      const promptText = promptMessages
+        .map((msg) => {
+          if (msg.content?.type === "text") {
+            return msg.content.text;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      const editor = editorRef.current;
+      if (editor) {
+        editor.setContent(promptText);
+        setValueRef.current(promptText);
+        editor.focus("end");
       }
-      onComplete();
     }
-  }, [
-    selectedMcpPromptData,
-    selectedMcpPromptName,
-    editorRef,
-    setValue,
-    onComplete,
-  ]);
+    onCompleteRef.current();
+  }, [selectedMcpPromptData, selectedMcpPromptName, editorRef]);
 
   return null;
 };

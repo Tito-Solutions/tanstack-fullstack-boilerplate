@@ -13,12 +13,14 @@ import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
 import { ThemeProvider } from "~/components/theme-provider";
-import { Toaster } from "~/components/ui/sonner";
+// import { Toaster } from "~/components/ui/sonner";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { TamboProvider } from "@tambo-ai/react";
 import { components } from "@/lib/tambo";
 import { MessageThreadPanel } from "@/components/ui/message-thread-panel";
+import { sileo, Toaster } from "sileo";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -85,6 +87,7 @@ function RootComponent() {
 function RootDocument({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const prevPathnameRef = React.useRef("");
+  const authStore = useAuthenticationStore();
 
   React.useEffect(() => {
     const currentPathname = routerState.location.pathname;
@@ -107,17 +110,18 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <TamboProvider
           apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
           components={components}
+          userKey={authStore.user.id ?? ""}
         >
           <div className="min-h-screen bg-background flex flex-row">
-            {/* Tambo components */}
-            <MessageThreadPanel className="border-b border-border md:w-80 md:border-b-0 md:border-r sticky top-0" />
             {/* main app content */}
             <main className="flex-1 overflow-auto">{children}</main>
+            {/* Tambo components */}
+            <MessageThreadPanel className="border-b border-border w-80 md:border-b-0 md:border-r sticky top-0" />
           </div>
         </TamboProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
-        <Toaster />
+        <Toaster position="top-center" />
       </ThemeProvider>
     </>
   );
