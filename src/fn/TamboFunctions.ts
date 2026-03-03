@@ -10,10 +10,14 @@ interface GetDashboardAnalyticsInput {
 }
 
 async function getDashboardAnalytics(input: GetDashboardAnalyticsInput) {
+  try {
   const res = await http.get("/activity/dashboard", {
-    params: { range: input.range },
-  });
-  return res.data;
+      params: { range: input.range },
+    });
+    return res.data;
+  } catch (error: any) {
+    return error.response.data;
+  }
 }
 
 export const DashboardAnalyticsTool: TamboTool = {

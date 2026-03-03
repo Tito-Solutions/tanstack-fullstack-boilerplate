@@ -15,6 +15,7 @@ import { useLoader } from "~/store/useLoader";
 import { useAxios } from "~/hooks/useAxios";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useTamboComponentState } from "@tambo-ai/react";
 
 export const ProfileInformationCardSchema = z.object({
   firstName: z.string().optional(),
@@ -28,15 +29,15 @@ export function ProfileInformationCard() {
   const { user, setUser } = useAuthenticationStore();
   const { loading, start, stop } = useLoader();
   const { $http } = useAxios();
-  const [profileFormErrors, setProfileFormErrors] = useState<Record<string, any>>({});
-  const [profileForm, setProfileForm] = useState<ProfileForm>({
+  const [profileFormErrors, setProfileFormErrors] = useTamboComponentState<Record<string, any>>("profileFormErrors", {});
+  const [profileForm, setProfileForm] = useTamboComponentState<ProfileForm>("profileForm", {
     firstName: user?.first_name || '',
     lastName: user?.last_name || '',
     email: user?.email || '',
   });
 
   const handleProfileFormChange = (field: keyof ProfileForm, value: string) => {
-    setProfileForm({ ...profileForm, [field]: value });
+    setProfileForm((prev) => ({ ...prev, [field]: value }) as ProfileForm);
     setProfileFormErrors({ ...profileFormErrors, [field]: null });
   };
 
@@ -92,14 +93,14 @@ export function ProfileInformationCard() {
             <TextField
               id="first_name"
               label="First Name"
-              value={profileForm.firstName}
+              value={profileForm?.firstName || ''}
               onChange={(e) => handleProfileFormChange('firstName', e.target.value)}
               className="flex-1"
             />
             <TextField
               id="last_name"
               label="Last Name"
-              value={profileForm.lastName}
+              value={profileForm?.lastName || ''}
               onChange={(e) => handleProfileFormChange('lastName', e.target.value)}
               className="flex-1"
             />
