@@ -245,7 +245,7 @@ export const MessageThreadPanel = React.forwardRef<
           </div>
         )}
 
-        <div className="flex flex-col h-full flex-grow transition-all duration-300 ease-in-out">
+        <div className="flex flex-col h-full grow overflow-hidden transition-all duration-300 ease-in-out">
           {/* Message thread content */}
           <ScrollableMessageContainer className="p-4">
             <ThreadContent variant={variant}>

@@ -108,22 +108,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
           components={components}
         >
-          {/* <div className="min-h-screen bg-background flex flex-col"> */}
-            <div className="flex flex-1 flex-row">
-              {/* Tambo components */}
-              <div className="w-full h-full border-b border-border md:w-80 md:border-b-0 md:border-r">
-                <MessageThreadPanel />
-              </div>
-              {/* <Header /> */}
-              <main className="flex-1 overflow-auto p-4">{children}</main>
-              {/* <Footer /> */}
-            </div>
-          {/* </div> */}
-          {/* other Tambo components */}
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="bottom-left" />
-          <Toaster />
+          <div className="min-h-screen bg-background flex flex-row">
+            {/* Tambo components */}
+            <MessageThreadPanel className="border-b border-border md:w-80 md:border-b-0 md:border-r sticky top-0" />
+            {/* main app content */}
+            <main className="flex-1 overflow-auto">{children}</main>
+          </div>
         </TamboProvider>
+        <TanStackRouterDevtools position="bottom-right" />
+        <ReactQueryDevtools buttonPosition="bottom-left" />
+        <Toaster />
       </ThemeProvider>
     </>
   );
