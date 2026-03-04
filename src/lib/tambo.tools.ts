@@ -30,16 +30,20 @@ export const DashboardAnalyticsTool: TamboTool = {
 };
 
 async function getMetricsData(input: GetDashboardAnalyticsInput) {
-    const res = await http.get("/activity/dashboard", {
-      params: { range: input.range },
-    });
-    const data = res.data.data;
-    return data.metrics;
+    try {
+        const res = await http.get("/activity/dashboard", {
+          params: { range: input.range },
+        });
+        const data = res.data.data;
+        return data.metrics;
+    }catch(error: any) {
+        return error.response.data;
+    }
   }
 
 export const MetricsDataTool: TamboTool = {
   name: "get_metrics_data",
-  description: "To get the dashboard metrics card data and pass to the props of the component",
+  description: "To get the dashboard metrics card data and pass to the props of the component, always show the component DashboardMetricCard.",
   tool: getMetricsData,
   inputSchema: z.object({
     range: z.enum(['week', 'month', 'quarter', 'year']).describe("The range of the analytics data, always ask user for this value"),

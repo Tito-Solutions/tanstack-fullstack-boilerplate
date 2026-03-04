@@ -19,7 +19,7 @@ import { z } from "zod";
 export const ProfileInformationCardSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  email: z.string().min(1, { message: "Email is required" }),
+  email: z.string().min(1, { message: "Email is required" }).describe("This is always required"),
 })
 export type ProfileForm = z.infer<typeof ProfileInformationCardSchema>;
 

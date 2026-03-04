@@ -5,7 +5,7 @@ import { ProfileInformationCard } from "./ProfileInformationCard";
 export const ProfileInformationCardPropsSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  email: z.string().min(1, { message: "Email is required" }),
+  email: z.string().min(1, { message: "Email is required" }).describe("This is always required"),
 });
 
 export const InteractableProfileInformationCard = withTamboInteractable(
