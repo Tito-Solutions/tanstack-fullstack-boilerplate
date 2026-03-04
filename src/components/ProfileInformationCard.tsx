@@ -15,7 +15,6 @@ import { useLoader } from "~/store/useLoader";
 import { useAxios } from "~/hooks/useAxios";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useTamboComponentState } from "@tambo-ai/react";
 
 export const ProfileInformationCardSchema = z.object({
   firstName: z.string().optional(),
@@ -25,12 +24,12 @@ export const ProfileInformationCardSchema = z.object({
 export type ProfileForm = z.infer<typeof ProfileInformationCardSchema>;
 
 export function ProfileInformationCard() {
-  
+
   const { user, setUser } = useAuthenticationStore();
   const { loading, start, stop } = useLoader();
   const { $http } = useAxios();
-  const [profileFormErrors, setProfileFormErrors] = useTamboComponentState<Record<string, any>>("profileFormErrors", {});
-  const [profileForm, setProfileForm] = useTamboComponentState<ProfileForm>("profileForm", {
+  const [profileFormErrors, setProfileFormErrors] = useState<Record<string, any>>({});
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
     firstName: user?.first_name || '',
     lastName: user?.last_name || '',
     email: user?.email || '',
@@ -74,7 +73,7 @@ export function ProfileInformationCard() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center gap-4 md:flex-row">
-          <UserAvatar 
+          <UserAvatar
             imageUrl={null}
             name={user.name}
             email={user.email}
@@ -87,7 +86,7 @@ export function ProfileInformationCard() {
             </p>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <div className="grid xl:grid-cols-2 grid-cols-1 gap-4">
             <TextField

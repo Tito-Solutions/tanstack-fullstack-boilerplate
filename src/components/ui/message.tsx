@@ -4,7 +4,7 @@ import { TamboThreadMessage, TamboToolUseContent } from "@tambo-ai/react";
 import {
   Message as MessageBase,
   type MessageContentProps as MessageBaseContentProps,
-  type MessageContentRenderProps as MessageBaseContentRenderProps,
+  type MessageContentState,
   type MessageImagesProps as MessageBaseImagesProps,
   type MessageRenderedComponentProps as MessageBaseRenderedComponentProps,
   type MessageLoadingIndicatorProps,
@@ -205,7 +205,7 @@ export type MessageContentProps = Omit<MessageBaseContentProps, "children">;
  * @component MessageContent
  */
 const MessageContent = React.forwardRef<HTMLDivElement, MessageContentProps>(
-  ({ className, content, markdown = true, ...props }, ref) => {
+  ({ className, messageContent, renderAsMarkdown = true, ...props }, ref) => {
     return (
       <MessageBase.Content
         ref={ref}
@@ -213,19 +213,13 @@ const MessageContent = React.forwardRef<HTMLDivElement, MessageContentProps>(
           "relative block rounded-3xl px-4 py-2 text-[15px] leading-relaxed transition-all duration-200 font-medium max-w-full [&_p]:py-1 [&_li]:list-item",
           className,
         )}
-        content={content}
-        markdown={markdown}
-        render={({
-          content: contentToRender,
-          markdownContent,
-          markdown: markdownEnabled,
-          isLoading,
-          isCancelled,
-          isReasoning,
-        }: MessageBaseContentRenderProps) => {
-          if (isLoading && !isReasoning) {
+        messageContent={messageContent}
+        renderAsMarkdown={renderAsMarkdown}
+        render={(elementProps, state: MessageContentState) => {
+          if (state.loading && !state.reasoning) {
             return (
               <div
+                {...elementProps}
                 className="flex items-center justify-start h-4 py-1"
                 data-slot="message-loading-indicator"
               >
@@ -236,20 +230,19 @@ const MessageContent = React.forwardRef<HTMLDivElement, MessageContentProps>(
 
           return (
             <div
+              {...elementProps}
               className={cn(
+                elementProps.className,
                 "wrap-break-word",
-                !markdownEnabled && "whitespace-pre-wrap",
+                !state.markdown && "whitespace-pre-wrap",
               )}
               data-slot="message-content-text"
             >
               <MessageContentRenderer
-                contentToRender={contentToRender}
-                markdownContent={markdownContent}
-                markdown={markdownEnabled}
+                contentToRender={state.content}
+                markdownContent={state.contentAsMarkdownString ?? ""}
+                markdown={state.markdown}
               />
-              {isCancelled && (
-                <span className="text-muted-foreground text-xs">cancelled</span>
-              )}
             </div>
           );
         }}
@@ -289,7 +282,8 @@ const toolStatusIconClassName = cva("h-3 w-3 text-bold", {
 function ToolcallStatusIcon() {
   return (
     <ToolcallInfoBase.StatusIcon
-      render={({ status }) => {
+      render={(_elementProps, state) => {
+        const status = (state as any).status;
         let Icon = Check;
         if (status === "error") Icon = X;
         if (status === "loading") Icon = Loader2;
@@ -328,39 +322,39 @@ function ToolcallInfoContent({ markdown }: { markdown: boolean }) {
         "data-[state=open]:max-h-auto data-[state=open]:opacity-100",
         "data-[state=closed]:max-h-0 data-[state=closed]:opacity-0 data-[state=closed]:p-0",
       )}
-    >
-      {({ message }) => (
-        <>
+      render={(props, state) => (
+        <div {...props}>
           <ToolcallInfoBase.ToolName
             className="whitespace-pre-wrap pl-2"
-          >
-            {({ toolName }) => <>{`tool: ${toolName}`}</>}
-          </ToolcallInfoBase.ToolName>
+            render={(toolNameProps, toolNameState) => (
+              <span {...toolNameProps}>{`tool: ${toolNameState.toolName}`}</span>
+            )}
+          />
           <ToolcallInfoBase.Parameters
             className="whitespace-pre-wrap pl-2"
-          >
-            {({ parametersString }) => (
-              <>{`parameters:\n${parametersString}`}</>
+            render={(paramProps, paramState) => (
+              <span {...paramProps}>{`parameters:\n${(paramState as any).parametersString}`}</span>
             )}
-          </ToolcallInfoBase.Parameters>
-          <SamplingSubThread parentMessageId={message.id} />
-          <ToolcallInfoBase.Result className="pl-2">
-            {({ content, hasResult }) => (
-              <>
+          />
+          <SamplingSubThread parentMessageId={state.message?.id ?? ""} />
+          <ToolcallInfoBase.Result
+            className="pl-2"
+            render={(resultProps, resultState) => (
+              <div {...resultProps}>
                 <span className="whitespace-pre-wrap">result:</span>
                 <div>
                   <ToolResultDisplay
-                    content={content}
-                    hasResult={hasResult}
+                    content={resultState.content}
+                    hasResult={resultState.hasResult}
                     enableMarkdown={markdown}
                   />
                 </div>
-              </>
+              </div>
             )}
-          </ToolcallInfoBase.Result>
-        </>
+          />
+        </div>
       )}
-    </ToolcallInfoBase.Content>
+    />
   );
 }
 
@@ -473,7 +467,7 @@ const SamplingSubThread = ({
                   className={cn(
                     "whitespace-pre-wrap",
                     m.role === "assistant" &&
-                      "bg-muted/50 rounded-md p-2 inline-block w-fit",
+                    "bg-muted/50 rounded-md p-2 inline-block w-fit",
                   )}
                 >
                   {getSafeContent(m.content)}
@@ -533,28 +527,32 @@ const ReasoningInfo = React.forwardRef<HTMLDivElement, ReasoningInfoProps>(
           >
             <ReasoningInfoBase.Steps
               className="space-y-4"
-              render={({ steps, showStepNumbers }) => (
-                <>
-                  {steps.map((reasoningStep, index) => (
-                    <div key={index} className="flex flex-col gap-1">
-                      {showStepNumbers && (
-                        <span className="text-muted-foreground text-xs font-medium">
-                          Step {index + 1}:
-                        </span>
-                      )}
-                      {reasoningStep && (
-                        <div className="bg-muted/50 rounded-md p-3 text-xs overflow-x-auto overflow-y-auto max-w-full">
-                          <div className="whitespace-pre-wrap wrap-break-word">
-                            <Streamdown components={markdownComponents}>
-                              {reasoningStep}
-                            </Streamdown>
+              render={(stepsProps, stepsState) => {
+                const steps: string[] = (stepsState as any).steps ?? [];
+                const showStepNumbers: boolean = (stepsState as any).showStepNumbers ?? false;
+                return (
+                  <div {...stepsProps}>
+                    {steps.map((reasoningStep: string, index: number) => (
+                      <div key={index} className="flex flex-col gap-1">
+                        {showStepNumbers && (
+                          <span className="text-muted-foreground text-xs font-medium">
+                            Step {index + 1}:
+                          </span>
+                        )}
+                        {reasoningStep && (
+                          <div className="bg-muted/50 rounded-md p-3 text-xs overflow-x-auto overflow-y-auto max-w-full">
+                            <div className="whitespace-pre-wrap wrap-break-word">
+                              <Streamdown components={markdownComponents}>
+                                {reasoningStep}
+                              </Streamdown>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </>
-              )}
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
             />
           </ReasoningInfoBase.Content>
         </div>

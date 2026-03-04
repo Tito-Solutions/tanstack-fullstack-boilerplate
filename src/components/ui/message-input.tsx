@@ -141,33 +141,29 @@ const MessageInput = React.forwardRef<HTMLFormElement, MessageInputProps>(
           <MessageInputBase.Content
             className={cn(
               "group relative flex flex-col rounded-xl bg-background shadow-md p-2 px-3 border",
-              // Styling via data attributes - no render prop needed for drag state
               "border-border data-dragging:border-dashed data-dragging:border-emerald-400",
             )}
           >
-            {({ elicitation, resolveElicitation }) => (
-              <>
-                {/* Drop overlay styled with CSS, shown via group-data-[dragging] */}
-                <div className="absolute inset-0 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/30 items-center justify-center pointer-events-none z-20 hidden group-data-dragging:flex">
-                  <p className="text-emerald-700 dark:text-emerald-300 font-medium">
-                    Drop files here to add to conversation
-                  </p>
-                </div>
-
-                {elicitation && resolveElicitation ? (
-                  <ElicitationUI
-                    request={elicitation}
-                    onResponse={resolveElicitation}
-                  />
-                ) : (
-                  <>
-                    <MessageInputStagedImages />
-                    {children}
-                  </>
-                )}
-              </>
-            )}
+            <div className="absolute inset-0 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/30 items-center justify-center pointer-events-none z-20 hidden group-data-dragging:flex">
+              <p className="text-emerald-700 dark:text-emerald-300 font-medium">
+                Drop files here to add to conversation
+              </p>
+            </div>
+            <MessageInputStagedImages />
+            {children}
           </MessageInputBase.Content>
+          <MessageInputBase.Elicitation
+            render={(elicitationProps, state) => (
+              <div {...elicitationProps}>
+                {state.elicitation && state.onResponse && (
+                  <ElicitationUI
+                    request={state.elicitation}
+                    onResponse={state.onResponse}
+                  />
+                )}
+              </div>
+            )}
+          />
         </TooltipProvider>
       </MessageInputBase.Root>
     );
@@ -278,67 +274,52 @@ const MessageInputTextarea = ({
       className={cn("flex-1", className)}
       data-slot="message-input-textarea"
       {...props}
-    >
-      {({
-        value,
-        setValue,
-        handleSubmit,
-        editorRef,
-        disabled,
-        addImage,
-        images,
-        setImageError,
-        resourceItems,
-        setResourceSearch,
-        promptItems,
-        setPromptSearch,
-      }) => {
-        // Handle image paste - mark as pasted and add to thread
+      render={(textareaProps, state) => {
         const handleAddImage = async (file: File) => {
-          if (images.length + pendingImagesRef.current >= MAX_IMAGES) {
-            setImageError(`Max ${MAX_IMAGES} uploads at a time`);
+          if (state.images.length + pendingImagesRef.current >= MAX_IMAGES) {
+            state.setImageError(`Max ${MAX_IMAGES} uploads at a time`);
             return;
           }
-          setImageError(null);
+          state.setImageError(null);
           pendingImagesRef.current += 1;
           try {
             file[IS_PASTED_IMAGE] = true;
-            await addImage(file);
+            await state.addImage(file);
           } finally {
             pendingImagesRef.current -= 1;
           }
         };
 
         return (
-          <>
+          <div {...textareaProps}>
             <McpPromptEffect
               selectedMcpPromptName={selectedMcpPromptName}
               selectedMcpPromptData={selectedMcpPromptData}
-              editorRef={editorRef}
-              setValue={setValue}
+              editorRef={state.editorRef}
+              setValue={state.setValue}
               onComplete={() => setSelectedMcpPromptName(null)}
             />
             <TextEditor
-              ref={editorRef as React.RefObject<TamboEditor>}
-              value={value}
-              onChange={setValue}
+              ref={state.editorRef as React.RefObject<TamboEditor>}
+              value={state.value}
+              onChange={state.setValue}
               onResourceNamesChange={setResourceNames}
-              onSubmit={handleSubmit}
+              onSubmit={state.handleSubmit}
               onAddImage={handleAddImage}
               placeholder={placeholder}
-              disabled={disabled}
+              disabled={state.disabled}
               className="bg-background text-foreground"
-              onSearchResources={setResourceSearch}
-              resources={resourceItems}
-              onSearchPrompts={setPromptSearch}
-              prompts={promptItems}
+              onSearchResources={state.setResourceSearch}
+              resources={state.resourceItems}
+              onSearchPrompts={state.setPromptSearch}
+              prompts={state.promptItems}
               onResourceSelect={onResourceSelect ?? noop}
               onPromptSelect={handlePromptSelect}
             />
-          </>
+          </div>
         );
       }}
-    </MessageInputBase.Textarea>
+    />
   );
 };
 MessageInputTextarea.displayName = "MessageInput.Textarea";
@@ -423,18 +404,9 @@ const MessageInputPlainTextarea = ({
   return (
     <MessageInputBase.Textarea
       placeholder={placeholder}
-    >
-      {({
-        value,
-        setValue,
-        submitMessage,
-        disabled,
-        addImage,
-        images,
-        setImageError,
-      }) => {
+      render={(textareaProps, state) => {
         const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-          setValue(e.target.value);
+          state.setValue(e.target.value);
         };
 
         const handleKeyDown = async (
@@ -442,8 +414,8 @@ const MessageInputPlainTextarea = ({
         ) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            if (value.trim()) {
-              await submitMessage();
+            if (state.value.trim()) {
+              await state.submitMessage();
             }
           }
         };
@@ -454,25 +426,24 @@ const MessageInputPlainTextarea = ({
           const { imageItems, hasText } = getImageItems(e.clipboardData);
 
           if (imageItems.length === 0) {
-            return; // Allow default text paste
+            return;
           }
 
           if (!hasText) {
-            e.preventDefault(); // Only prevent when image-only paste
+            e.preventDefault();
           }
 
-          const totalImages = images.length + imageItems.length;
+          const totalImages = state.images.length + imageItems.length;
           if (totalImages > MAX_IMAGES) {
-            setImageError(`Max ${MAX_IMAGES} uploads at a time`);
+            state.setImageError(`Max ${MAX_IMAGES} uploads at a time`);
             return;
           }
-          setImageError(null);
+          state.setImageError(null);
 
           for (const item of imageItems) {
             try {
-              // Mark this image as pasted so we can show "Image 1", "Image 2", etc.
               item[IS_PASTED_IMAGE] = true;
-              await addImage(item);
+              await state.addImage(item);
             } catch (error) {
               console.error("Failed to add pasted image:", error);
             }
@@ -481,7 +452,7 @@ const MessageInputPlainTextarea = ({
 
         return (
           <textarea
-            value={value}
+            value={state.value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
@@ -489,7 +460,7 @@ const MessageInputPlainTextarea = ({
               "flex-1 p-3 rounded-t-lg bg-background text-foreground resize-none text-sm min-h-20.5 max-h-[40vh] focus:outline-none placeholder:text-muted-foreground/50",
               className,
             )}
-            disabled={disabled}
+            disabled={state.disabled}
             placeholder={placeholder}
             aria-label="Chat Message Input"
             data-slot="message-input-textarea"
@@ -497,7 +468,7 @@ const MessageInputPlainTextarea = ({
           />
         );
       }}
-    </MessageInputBase.Textarea>
+    />
   );
 };
 MessageInputPlainTextarea.displayName = "MessageInput.PlainTextarea";
@@ -540,16 +511,7 @@ const MessageInputSubmitButton = React.forwardRef<
       className={buttonClasses}
       {...props}
     >
-      {({ showCancelButton }) => (
-        <>
-          {children ??
-            (showCancelButton ? (
-              <Square className="w-4 h-4" fill="currentColor" />
-            ) : (
-              <ArrowUp className="w-5 h-5" />
-            ))}
-        </>
-      )}
+      {children ?? <ArrowUp className="w-5 h-5" />}
     </MessageInputBase.SubmitButton>
   );
 });
@@ -922,19 +884,18 @@ const MessageInputStagedImages = React.forwardRef<
         className,
       )}
       {...props}
-    >
-      {({ images }) => (
-        <>
-          {images.map(({ image, ...imageProps }) => (
+      render={(stagedProps, state) => (
+        <div {...stagedProps}>
+          {state.images.map(({ image, ...imageProps }) => (
             <ImageContextBadge
               key={image.id}
               image={image}
               {...imageProps}
             />
           ))}
-        </>
+        </div>
       )}
-    </MessageInputBase.StagedImages>
+    />
   );
 });
 MessageInputStagedImages.displayName = "MessageInput.StagedImages";

@@ -189,7 +189,7 @@ const ThreadContentMessages = React.forwardRef<
                       return (
                         <MessageContent
                           key={`content-${blockIndex}`}
-                          content={[block]}
+                          messageContent={[block]}
                           className={messageContentClassName}
                         />
                       );
