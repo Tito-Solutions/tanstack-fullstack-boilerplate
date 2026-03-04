@@ -6,7 +6,8 @@ import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 import { DateRange, WebAnalytics } from "~/components/analytics";
 import { useState } from "react";
 import { ForbiddenError } from "~/components/ForbiddenError";
-import {z} from "zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 export const SuperAdminDashboardSchema = z.object({
   range: z.string().optional(),
@@ -29,9 +30,9 @@ export function SuperAdminDashboardPage() {
     },
   });
 
-  const pages = data?.data?.chartData?.pages; 
-  const labels = Array.isArray(pages?.labels) ? pages.labels : []; 
-  const values = Array.isArray(pages?.datasets?.[0]?.data) ? pages.datasets[0].data : []; 
+  const pages = data?.data?.chartData?.pages;
+  const labels = Array.isArray(pages?.labels) ? pages.labels : [];
+  const values = Array.isArray(pages?.datasets?.[0]?.data) ? pages.datasets[0].data : [];
   const chartData = labels.map((date: string, i: number) => ({ date, count: values[i] ?? 0, }));
   const topPages = data?.data?.topPages;
   const metrics = data?.data?.metrics;
@@ -45,16 +46,23 @@ export function SuperAdminDashboardPage() {
 
   return (
     <DashboardLayout>
-      <WebAnalytics
-        title="Route Endpoint Analytics"
-        status="Online"
-        chartData={chartData}
-        topPages={topPages}
+      {isLoading && (
+        <div className="flex h-[400px] w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+      {data && (
+        <WebAnalytics
+          title="Route Endpoint Analytics"
+          status="Online"
+          chartData={chartData}
+          topPages={topPages}
         onDateRangeChange={(newRange: DateRange) => {
           setRange(newRange); // 🔥 THIS triggers refetch automatically
         }}
         metrics={metrics}
       />
+      )}
     </DashboardLayout>
   );
 }

@@ -20,7 +20,6 @@ import { Toaster } from "~/components/ui/sonner";
 import NProgress from "nprogress";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 import "nprogress/nprogress.css";
-import { DashboardAnalyticsTool, MetricsDataTool, UpdateProfileFormTool } from "~/fn/TamboFunctions";
 import { tools } from "~/lib/tambo.tools";
 
 export const Route = createRootRoute({
@@ -112,7 +111,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
           components={components}
           userKey={authStore.user.id ?? ""}
-          tools={[DashboardAnalyticsTool, MetricsDataTool, UpdateProfileFormTool]}
+          tools={tools}
         >
           <div className="min-h-screen bg-background">
             {/* <Header /> */}

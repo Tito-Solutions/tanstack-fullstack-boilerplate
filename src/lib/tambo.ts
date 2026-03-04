@@ -20,6 +20,7 @@ import { InteractableProfileInformationCard, ProfileInformationCardPropsSchema }
 import { MetricCard, MetricSchema } from "~/components/analytics/MetricCard";
 import { WebAnalyticsChartCard, WebAnalyticsChartCardSchema } from "~/components/analytics/WebAnalyticsChartCard";
 import { WebAnalyticsRoutesTable, WebAnalyticsRoutesTableSchema } from "~/components/analytics/WebAnalyticsRoutesTable";
+import { z } from "zod";
 /**
  * Components Array - A collection of Tambo components to register
  * 
@@ -79,7 +80,7 @@ export const components: TamboComponent[] = [
   },
   {
     name: 'DashboardMetricCard',
-    description: 'Dashboard Metric Card use the tool get_dashboard_analytics to get data',
+    description: 'To display the dashboard metrics card. Get data from the tool get_metrics_data',
     component: MetricCard,
     propsSchema: MetricSchema,
   },
@@ -94,6 +95,21 @@ export const components: TamboComponent[] = [
     description: 'Dashboard Routes Table',
     component: WebAnalyticsRoutesTable,
     propsSchema: WebAnalyticsRoutesTableSchema,
+  },
+  {
+    name: "DataChart",
+    description: "Displays data as a chart",
+    component: WebAnalyticsChartCard,
+    propsSchema: z.object({
+      data: z.array(
+        z.object({
+          label: z.string().describe("Short label text, 1-3 words"),
+          value: z.number().describe("Numeric value for the data point"),
+        }),
+      ),
+      type: z.enum(["bar", "line", "pie"])
+        .describe("Use bar for comparisons, line for trends, pie for proportions"),
+    }),
   },
 ];
 
