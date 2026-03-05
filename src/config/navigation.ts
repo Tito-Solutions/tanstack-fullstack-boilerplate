@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart, Users, Settings, User, LogOut } from "lucide-react";
+import { LayoutDashboard, BarChart, Users, Settings, User, LogOut, UserCircle } from "lucide-react";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 
 export interface NavItem {
@@ -13,7 +13,7 @@ const commonNavItems = (role: string): NavItem[] => [
   {
     title: "Profile",
     href: `/${role}/profile`,
-    icon: User,
+    icon: UserCircle,
   },
   {
     title: "Logout",
@@ -30,11 +30,11 @@ const superAdminNavItems: NavItem[] = [
     icon: LayoutDashboard,
     exact: true,
   },
-  // {
-  //   title: "Analytics",
-  //   href: "/super_admin/analytics",
-  //   icon: BarChart,
-  // },
+  {
+    title: "Users",
+    href: "/super_admin/users",
+    icon: Users,
+  },
   ...commonNavItems('super_admin'),
 ]
 
@@ -44,6 +44,11 @@ const adminNavItems: NavItem[] = [
     href: "/admin/dashboard",
     icon: LayoutDashboard,
     exact: true,
+  },
+  {
+    title: "Users",
+    href: "/admin/users",
+    icon: Users,
   },
   ...commonNavItems('admin'),
 ];

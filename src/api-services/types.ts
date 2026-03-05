@@ -5,8 +5,9 @@ export interface User {
   email: string;
   emailVerified: boolean;
   image?: string;
-  role: 'super_admin' | 'admin' | 'guest';
+  roles: 'super_admin' | 'admin' | 'manager' | 'user';
   status: 'active' | 'suspended';
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,13 +77,13 @@ export interface CreateUserInput {
   name: string;
   email: string;
   password: string;
-  role?: 'super_admin' | 'admin' | 'guest';
+  roles?: 'super_admin' | 'admin' | 'manager' | 'user';
 }
 
 export interface UpdateUserInput {
   name?: string;
   email?: string;
-  role?: 'super_admin' | 'admin' | 'guest';
+  roles?: 'super_admin' | 'admin' | 'manager' | 'user';
   status?: 'active' | 'suspended';
 }
 
@@ -91,11 +92,13 @@ export interface UpdateProfileRequest {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  users: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface ApiResponse<T = unknown> {

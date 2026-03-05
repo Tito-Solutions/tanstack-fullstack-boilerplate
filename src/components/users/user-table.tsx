@@ -3,11 +3,11 @@ import { useUsersTable } from '~/hooks/api/use-users-table';
 import type { ColumnDef } from '~/api-services/types';
 import { Badge } from '../ui/badge';
 
-const getRoleBadgeVariant = (role: string | undefined) => {
-  if (!role) {
+const getRoleBadgeVariant = (roles: string | undefined) => {
+  if (!roles) {
     return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
   }
-  switch (role) {
+  switch (roles) {
     case 'super_admin':
       return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
     case 'admin':
@@ -17,18 +17,11 @@ const getRoleBadgeVariant = (role: string | undefined) => {
   }
 };
 
-const getStatusBadgeVariant = (status: string | undefined) => {
+const getStatusBadgeVariant = (status: boolean | undefined) => {
   if (!status) {
     return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
   }
-  switch (status) {
-    case 'active':
-      return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
-    case 'suspended':
-      return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-  }
+  return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
 };
 
 const userColumns: ColumnDef<import('~/api-services/types').User>[] = [
@@ -45,23 +38,25 @@ const userColumns: ColumnDef<import('~/api-services/types').User>[] = [
     header: 'Email',
   },
   {
-    key: 'role',
+    key: 'roles',
     header: 'Role',
     render: (value, item) => (
-      <Badge className={getRoleBadgeVariant(item.role)}>
-        {item.role
-          .split('_')
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')}
+      <Badge className={getRoleBadgeVariant(item.roles)}>
+        {item.roles
+          ? item.roles
+              .split('_')
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ')
+          : '—'}
       </Badge>
     ),
   },
   {
-    key: 'status',
+    key: 'isActive',
     header: 'Status',
     render: (value, item) => (
-      <Badge className={getStatusBadgeVariant(item.status)}>
-        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+      <Badge className={getStatusBadgeVariant(item.isActive)}>
+        {item.isActive ? 'Active' : 'Suspended'}
       </Badge>
     ),
   },
@@ -91,6 +86,7 @@ export function UserTable() {
     setLimit,
     setSearch,
   } = useUsersTable();
+  
 
   return (
     <DataTableContainer
@@ -100,9 +96,9 @@ export function UserTable() {
       title="Users"
       searchPlaceholder="Search users by name or email..."
       tableState={tableState}
-      data={data?.data}
-      totalPages={data?.totalPages || 0}
-      total={data?.total || 0}
+      data={data}
+      totalPages={totalPages}
+      total={total}
       loading={loading}
       error={error}
       setPage={setPage}

@@ -30,7 +30,7 @@ function UsersPage() {
   );
 }
 
-export const Route = createFileRoute("/super_admin/users/")({
+export const Route = createFileRoute("/admin/users/")({
   beforeLoad: ({ location }) => {
     const { isAuthenticated, user } = useAuthenticationStore.getState();
 
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/super_admin/users/")({
       });
     }
 
-    if (!user.role || user.role !== 'super_admin') {
+    if (!user.role || user.role !== 'super_admin' && user.role !== 'admin') {
       throw redirect({
         to: '/forbidden'
       });
