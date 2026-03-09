@@ -67,7 +67,7 @@ export function TablePagination({
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="hidden sm:inline">
-          Showing {startIndex + 1} to {endIndex} of {total} entries
+          Showing {startIndex + 1} to {endIndex} of {total} {total === 1 ? 'entry' : 'entries'}
         </span>
         <span className="sm:hidden">
           {startIndex + 1}-{endIndex} of {total}

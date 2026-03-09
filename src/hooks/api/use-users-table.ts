@@ -18,11 +18,24 @@ export function useUsersTable() {
         params: { page: state.page, limit: state.limit, search: state.search },
       });
       
-      return res.data;
+      // Transform backend response to match expected PaginatedResponse format
+      const backendData = res.data;
+      const totalPages = Math.ceil(backendData.total / backendData.limit);
+      
+      return {
+        users: backendData.users,
+        pagination: {
+          page: backendData.page,
+          limit: backendData.limit,
+          total: backendData.total,
+          totalPages: totalPages
+        }
+      };
       // return generateDummyUsers(state.page, state.limit, state.search);
     },
     { page: 1, limit: 10, search: '' }
   );
+
 
   return {
     data: result.data?.users || [],

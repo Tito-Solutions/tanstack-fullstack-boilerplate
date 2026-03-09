@@ -3,6 +3,7 @@ import { z } from "zod";
 import { http } from "~/hooks/api/http";
 import { ProfileForm } from "~/components/ProfileInformationCard";
 import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+import { formSchema, FormValues } from "~/components/users/add-user-modal";
 
 interface GetDashboardAnalyticsInput {
   range: 'week' | 'month' | 'quarter' | 'year';
@@ -74,8 +75,26 @@ export const UpdateProfileFormTool: TamboTool = {
   outputSchema: z.any(),
 };
 
+
+async function createUser(input: FormValues) {
+  try {
+    const res = await http.post("/users/create", input);
+    return res.data;
+  } catch (error: any) {
+    return error.response.data;
+  }
+}
+export const createUserTool: TamboTool = {
+  name: "create_user",
+  description: "Create a new user",
+  tool: createUser,
+  inputSchema: formSchema,
+  outputSchema: z.any(),
+};
+
 export const tools = [
     DashboardAnalyticsTool,
     MetricsDataTool,
     UpdateProfileFormTool,
+    createUserTool,
 ];

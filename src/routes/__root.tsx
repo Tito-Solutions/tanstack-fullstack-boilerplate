@@ -103,6 +103,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     }
   }, [routerState.status, routerState.location.pathname]);
 
+  const randomUserKey = Math.random().toString(36).substring(2, 15);
+
   return (
     <>
       <HeadContent />
@@ -110,7 +112,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <TamboProvider
           apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
           components={components}
-          userKey={authStore.user.id ?? ""}
+          userKey={authStore.user.id ?? randomUserKey}
           tools={tools}
         >
           <div className="min-h-screen bg-background">

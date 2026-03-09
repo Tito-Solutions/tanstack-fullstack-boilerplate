@@ -20,6 +20,7 @@ import { InteractableProfileInformationCard, ProfileInformationCardPropsSchema }
 import { MetricCard, MetricSchema } from "~/components/analytics/MetricCard";
 import { WebAnalyticsChartCard, WebAnalyticsChartCardSchema } from "~/components/analytics/WebAnalyticsChartCard";
 import { WebAnalyticsRoutesTable, WebAnalyticsRoutesTableSchema } from "~/components/analytics/WebAnalyticsRoutesTable";
+import {AddUserModal, formSchema} from "~/components/users/add-user-modal";
 import { z } from "zod";
 /**
  * Components Array - A collection of Tambo components to register
@@ -110,6 +111,12 @@ export const components: TamboComponent[] = [
       type: z.enum(["bar", "line", "pie"])
         .describe("Use bar for comparisons, line for trends, pie for proportions"),
     }),
+  },
+  {
+    name: 'AddUser',
+    description: 'Add User Modal with user name and email',
+    component: AddUserModal,
+    propsSchema: formSchema,
   },
 ];
 
