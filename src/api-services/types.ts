@@ -5,8 +5,9 @@ export interface User {
   email: string;
   emailVerified: boolean;
   image?: string;
-  role: 'super_admin' | 'admin' | 'guest';
+  roles: 'super_admin' | 'admin' | 'manager' | 'user';
   status: 'active' | 'suspended';
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,16 +74,17 @@ export interface GetUsersParams {
 }
 
 export interface CreateUserInput {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  role?: 'super_admin' | 'admin' | 'guest';
+  roles?: 'super_admin' | 'admin' | 'manager' | 'user';
 }
 
 export interface UpdateUserInput {
   name?: string;
   email?: string;
-  role?: 'super_admin' | 'admin' | 'guest';
+  roles?: 'super_admin' | 'admin' | 'manager' | 'user';
   status?: 'active' | 'suspended';
 }
 
@@ -91,11 +93,13 @@ export interface UpdateProfileRequest {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  users: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface ApiResponse<T = unknown> {
@@ -111,11 +115,13 @@ export interface ApiError {
 }
 
 export interface ColumnDef<T> {
-  key: keyof T;
+  key: keyof T | string;
   header: string;
   sortable?: boolean;
   filterable?: boolean;
   render?: (value: T[keyof T], item: T) => React.ReactNode;
+  isActionColumn?: boolean;
+  width?: string;
 }
 
 export interface TableState {

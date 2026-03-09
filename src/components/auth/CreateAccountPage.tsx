@@ -64,7 +64,6 @@ export function CreateAccountPage() {
             <TextField
               id="email"
               label="Email"
-              type="email"
               placeholder="name@example.com"
               value={signUpForm.email || ''}
               error={signUpFormError?.email}

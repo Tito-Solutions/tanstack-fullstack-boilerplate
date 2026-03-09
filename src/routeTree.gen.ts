@@ -29,6 +29,7 @@ import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/
 import { Route as AuthVerifyMfaIndexRouteImport } from './routes/auth/verify-mfa/index'
 import { Route as AuthSignupIndexRouteImport } from './routes/auth/signup/index'
 import { Route as AuthSigninIndexRouteImport } from './routes/auth/signin/index'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminProfileIndexRouteImport } from './routes/admin/profile/index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/admin/dashboard/index'
 import { Route as AdminAnalyticsIndexRouteImport } from './routes/admin/analytics/index'
@@ -136,6 +137,11 @@ const AuthSigninIndexRoute = AuthSigninIndexRouteImport.update({
   path: '/auth/signin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/admin/users/',
+  path: '/admin/users/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProfileIndexRoute = AdminProfileIndexRouteImport.update({
   id: '/admin/profile/',
   path: '/admin/profile/',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics/': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
   '/admin/profile/': typeof AdminProfileIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/auth/signin/': typeof AuthSigninIndexRoute
   '/auth/signup/': typeof AuthSignupIndexRoute
   '/auth/verify-mfa/': typeof AuthVerifyMfaIndexRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard': typeof AdminDashboardIndexRoute
   '/admin/profile': typeof AdminProfileIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/auth/signin': typeof AuthSigninIndexRoute
   '/auth/signup': typeof AuthSignupIndexRoute
   '/auth/verify-mfa': typeof AuthVerifyMfaIndexRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/admin/analytics/': typeof AdminAnalyticsIndexRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
   '/admin/profile/': typeof AdminProfileIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/auth/signin/': typeof AuthSigninIndexRoute
   '/auth/signup/': typeof AuthSignupIndexRoute
   '/auth/verify-mfa/': typeof AuthVerifyMfaIndexRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/admin/analytics/'
     | '/admin/dashboard/'
     | '/admin/profile/'
+    | '/admin/users/'
     | '/auth/signin/'
     | '/auth/signup/'
     | '/auth/verify-mfa/'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/dashboard'
     | '/admin/profile'
+    | '/admin/users'
     | '/auth/signin'
     | '/auth/signup'
     | '/auth/verify-mfa'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/analytics/'
     | '/admin/dashboard/'
     | '/admin/profile/'
+    | '/admin/users/'
     | '/auth/signin/'
     | '/auth/signup/'
     | '/auth/verify-mfa/'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   AdminAnalyticsIndexRoute: typeof AdminAnalyticsIndexRoute
   AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
   AdminProfileIndexRoute: typeof AdminProfileIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AuthSigninIndexRoute: typeof AuthSigninIndexRoute
   AuthSignupIndexRoute: typeof AuthSignupIndexRoute
   AuthVerifyMfaIndexRoute: typeof AuthVerifyMfaIndexRoute
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSigninIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/profile/': {
       id: '/admin/profile/'
       path: '/admin/profile'
@@ -505,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnalyticsIndexRoute: AdminAnalyticsIndexRoute,
   AdminDashboardIndexRoute: AdminDashboardIndexRoute,
   AdminProfileIndexRoute: AdminProfileIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
   AuthSigninIndexRoute: AuthSigninIndexRoute,
   AuthSignupIndexRoute: AuthSignupIndexRoute,
   AuthVerifyMfaIndexRoute: AuthVerifyMfaIndexRoute,

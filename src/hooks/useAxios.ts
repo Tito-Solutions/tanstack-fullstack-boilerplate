@@ -82,7 +82,6 @@ export const useAxios = (): UseAxiosReturn => {
         })
       }
 
-      console.log('Request failed:', error.response || error)
       return Promise.reject(error)
     }
   )
