@@ -41,7 +41,7 @@ export const Route = createFileRoute("/admin/users/")({
       });
     }
 
-    if (!user.role || user.role !== 'super_admin' && user.role !== 'admin') {
+    if (!user.role || user.role !== 'super_admin' ) {
       throw redirect({
         to: '/forbidden'
       });

@@ -74,7 +74,8 @@ export interface GetUsersParams {
 }
 
 export interface CreateUserInput {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   roles?: 'super_admin' | 'admin' | 'manager' | 'user';
@@ -114,11 +115,13 @@ export interface ApiError {
 }
 
 export interface ColumnDef<T> {
-  key: keyof T;
+  key: keyof T | string;
   header: string;
   sortable?: boolean;
   filterable?: boolean;
   render?: (value: T[keyof T], item: T) => React.ReactNode;
+  isActionColumn?: boolean;
+  width?: string;
 }
 
 export interface TableState {

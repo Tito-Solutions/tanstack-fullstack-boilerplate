@@ -2,6 +2,8 @@ import { Fragment } from 'react';
 import type { ColumnDef } from '~/api-services/types';
 import { EmptyState } from '~/components/EmptyState';
 import { Skeleton } from './skeleton';
+import { TableBulkActions, useTableSelection } from './table-bulk-actions';
+import { Checkbox } from './checkbox';
 
 interface DataTableProps<T> {
   data: T[];
@@ -10,9 +12,12 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   onRowClick?: (item: T) => void;
   rowClassName?: (item: T) => string | undefined;
+  enableBulkActions?: boolean;
+  bulkActions?: any[];
+  itemIdKey?: keyof T;
 }
 
-export function DataTable<T>({
+export function DataTable<T extends Record<string, any>>({
   data,
   columns,
   loading = false,
@@ -93,9 +98,14 @@ export function DataTable<T>({
               onClick={() => onRowClick?.(item)}
             >
               {columns.map((col, cellIdx) => {
-                const value = item[col.key];
+                const value = col.key in item ? (item as any)[col.key] : undefined;
                 return (
-                  <td key={cellIdx} className="px-4 py-3 align-middle">
+                  <td
+                    key={cellIdx}
+                    className={`px-4 py-3 align-middle ${
+                      col.isActionColumn ? 'w-[1%] whitespace-nowrap' : ''
+                    }`}
+                  >
                     {col.render ? col.render(value, item) : String(value ?? '')}
                   </td>
                 );
