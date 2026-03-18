@@ -1,25 +1,51 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { authClient } from "~/lib/auth-client";
+import { DashboardLayout } from "~/components/layout/DashboardLayout";
+import { useAxios } from "~/hooks/useAxios";
+import { ForbiddenError } from "~/components/ForbiddenError";
 
+function DashboardHome() {
+  const { $http } = useAxios();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: async () => {
+      const res = await $http.get('/activity/dashboard');
+      return res.data;
+    },
+  });
+
+  if (isLoading) return <div>Loading dashboard...</div>;
+  if (error) return <ForbiddenError error={(error as any)?.response?.data} />;
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Welcome to Your Dashboard
+        </h1>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.auth.totalLogins}</div>
+            <div className="text-sm text-muted-foreground">Total Logins</div>
+          </div>
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.auth.failedLogins}</div>
+            <div className="text-sm text-muted-foreground">Failed Logins</div>
+          </div>
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="text-2xl font-bold">{data?.data.auth.failureRate}</div>
+            <div className="text-sm text-muted-foreground">Failure Rate</div>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
 });
-
-function DashboardHome() {
-  const { data: session } = authClient.useSession();
-
-  return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Welcome back, {session?.user?.name || "there"}!
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            This is your dashboard overview. Start building your features here.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}

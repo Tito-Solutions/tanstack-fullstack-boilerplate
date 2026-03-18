@@ -1,8 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
-import { createContext, useContext, useEffect } from "react";
-import { z } from "zod";
-import { getCookie, setCookie } from "@tanstack/react-start/server";
-import { useThemeQuery, useSetTheme } from "~/hooks/useTheme";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -14,48 +10,54 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = { theme: Theme; setTheme: (theme: Theme) => void };
 
-const THEME_COOKIE_NAME = "ui-theme";
+const THEME_STORAGE_KEY = "ui-theme";
+
+const getStoredTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'system';
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  return (stored as Theme) || 'system';
+};
+
+const setStoredTheme = (theme: Theme) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+};
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: getStoredTheme(),
   setTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
-export const getThemeFn = createServerFn().handler(async () => {
-  const theme = getCookie(THEME_COOKIE_NAME);
-  return theme ?? "system";
-});
-
-export const setThemeFn = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ theme: z.enum(["dark", "light", "system"]) }))
-  .handler(async ({ data }) => {
-    setCookie(THEME_COOKIE_NAME, data.theme);
-    return data.theme;
-  });
-
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const themeQuery = useThemeQuery();
-  const setThemeMutation = useSetTheme();
+export function ThemeProvider({ 
+  children, 
+  defaultTheme = 'system',
+  storageKey = THEME_STORAGE_KEY,
+  ...props 
+}: ThemeProviderProps) {
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme());
 
   useEffect(() => {
-    window
-      .matchMedia("(prefers-color-scheme: dark)")
-      .addEventListener("change", (event) => {
-        if (themeQuery.data === "system") {
-          const newColorScheme = event.matches ? "dark" : "light";
-          const root = window.document.documentElement;
-          root.classList.remove("light", "dark");
-          root.classList.add(newColorScheme);
-        }
-      });
-  }, [themeQuery.data]);
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      if (theme === "system") {
+        const newColorScheme = event.matches ? "dark" : "light";
+        const root = window.document.documentElement;
+        root.classList.remove("light", "dark");
+        root.classList.add(newColorScheme);
+      }
+    };
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", handleMediaChange);
+    
+    return () => {
+      mediaQuery.removeEventListener("change", handleMediaChange);
+    };
+  }, [theme]);
 
   useEffect(() => {
-    const theme = themeQuery.data as Theme;
     const root = window.document.documentElement;
-
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
@@ -69,21 +71,16 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     }
 
     root.classList.add(theme);
-  }, [themeQuery.data]);
+  }, [theme]);
+
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    setStoredTheme(newTheme);
+  };
 
   const value = {
-    theme: themeQuery.data as Theme,
-    setTheme: (theme: Theme) => {
-      console.log("setting theme", theme);
-      setThemeMutation.mutate(
-        { data: { theme } },
-        {
-          onSuccess: () => {
-            themeQuery.refetch();
-          },
-        }
-      );
-    },
+    theme,
+    setTheme,
   };
 
   return (

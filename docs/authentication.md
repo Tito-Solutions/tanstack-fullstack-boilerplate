@@ -1,436 +1,555 @@
 # Authentication System Documentation
 
-This document explains how authentication works in this TanStack Start application using Better Auth.
+This document explains how authentication works in this frontend-only React application using external API and JWT tokens.
 
 ## Overview
 
-The project uses **Better Auth** for authentication, which provides a comprehensive, type-safe authentication solution with email/password authentication, session management, and database integration through Drizzle ORM.
+The project uses **External API Authentication** with JWT (JSON Web Tokens) for authentication. The frontend consumes a backend API that handles authentication, session management, and user data. All authentication tokens are stored in localStorage and managed through a centralized API service layer with TanStack Query for state management.
 
 ## Architecture Components
 
-### 1. Better Auth Configuration (`src/utils/auth.ts`)
+### 1. Authentication Service (`src/api-services/auth.service.ts`)
 
 ```typescript
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { database } from "../db";
-
-export const auth = betterAuth({
-  database: drizzleAdapter(database, {
-    provider: "pg",
-  }),
-  emailAndPassword: {
-    enabled: true,
-  },
-  // Default redirect path after successful authentication
-  redirectTo: "/dashboard/projects",
-});
+export class AuthService {
+  async signIn(credentials: SignInRequest): Promise<AuthResponse>
+  async signUp(userData: SignUpRequest): Promise<AuthResponse>
+  async signOut(): Promise<void>
+  async resetPassword(request: ResetPasswordRequest): Promise<void>
+  async updatePassword(request: UpdatePasswordRequest): Promise<void>
+  async refreshToken(): Promise<AuthTokens | null>
+  async getCurrentUser(): Promise<User>
+  async verifyEmail(token: string): Promise<void>
+  async resendVerificationEmail(email: string): Promise<void>
+  async getOAuthUrl(provider: 'google' | 'github' | 'auth0'): Promise<string>
+  async handleOAuthCallback(code: string, state: string): Promise<AuthResponse>
+  isAuthenticated(): boolean
+  getAuthToken(): string | null
+}
 ```
 
 **Key Features:**
 
-- Uses Drizzle ORM adapter with PostgreSQL
-- Email and password authentication enabled
-- Automatic session management
-- Type-safe API endpoints
-- Default post-authentication redirect to `/dashboard/projects`
+- JWT-based authentication with access and refresh tokens
+- Email and password authentication
+- OAuth support for external providers (Google, GitHub, Auth0)
+- Token refresh mechanism
+- Session persistence in localStorage
+- Type-safe API interface
 
-### 2. Client-Side Auth (`src/lib/auth-client.ts`)
+### 2. React Hook (`src/hooks/api/use-auth.ts`)
 
 ```typescript
-import { createAuthClient } from "better-auth/react";
-
-export const authClient = createAuthClient({
-  baseURL: "http://localhost:3000",
-});
+export function useAuth() {
+  return {
+    user,             // Current user object or null
+    isAuthenticated,  // Boolean authentication status
+    isLoading,        // Loading state for initial auth check
+    signIn,           // Function to sign in
+    signUp,           // Function to sign up
+    signOut,          // Function to sign out
+    isSigningIn,      // Loading state for sign in
+    isSigningUp,      // Loading state for sign up
+    isSigningOut,     // Loading state for sign out
+  };
+}
 ```
 
 **Usage:**
 
-- Provides React hooks for authentication state
-- Handles sign-in/sign-up operations
-- Manages client-side session state
-
-### 3. Database Schema
-
-The authentication system uses several database tables:
-
-#### User Table (`user`)
-
 ```typescript
-export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull(),
-  image: text("image"),
-  // ... subscription fields
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});
+import { useAuth } from '~/hooks/api';
+
+function MyComponent() {
+  const { user, isAuthenticated, isLoading, signIn, signOut } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) {
+    return <button onClick={() => signIn({ email, password })}>Sign In</button>;
+  }
+
+  return (
+    <div>
+      <p>Welcome {user.name}!</p>
+      <button onClick={signOut}>Sign Out</button>
+    </div>
+  );
+}
 ```
 
-#### Session Table (`session`)
+### 3. HTTP Client (`src/api-services/client.ts`)
 
 ```typescript
-export const session = pgTable("session", {
-  id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  // ... timestamps
-});
+class ApiClient {
+  private client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+    });
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    // Request interceptor: Add auth token to all requests
+    this.client.interceptors.request.use((config) => {
+      const token = this.getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // Response interceptor: Handle 401 errors and token refresh
+    this.client.interceptors.response.use(
+      response => response,
+      async (error) => {
+        if (error.response?.status === 401 && !error.config._retry) {
+          error.config._retry = true;
+          const newToken = await this.refreshAuthToken();
+          if (newToken) {
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return this.client(error.config);
+          }
+          this.handleAuthFailure();
+        }
+        return Promise.reject(this.formatError(error));
+      }
+    );
+  }
+}
 ```
 
-#### Account Table (`account`)
+**Features:**
 
-```typescript
-export const account = pgTable("account", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  password: text("password"), // For email/password auth
-  // ... OAuth tokens and timestamps
-});
-```
-
-#### Verification Table (`verification`)
-
-```typescript
-export const verification = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  // ... timestamps
-});
-```
+- Automatic token injection from localStorage
+- Token refresh on 401 errors
+- Automatic redirect to login on auth failure
+- Centralized error handling
 
 ## Authentication Flow
 
-### 1. Email Registration (`src/routes/sign-up.tsx`)
+### 1. Sign-In Flow
 
-```typescript
-const onSubmit = async (data: SignUpForm) => {
-  const result = await authClient.signUp.email({
-    email: data.email,
-    password: data.password,
-    name: data.name,
-  });
-
-  if (result.error) {
-    setAuthError(result.error.message);
-  } else {
-    // Redirect to home or specified URL
-    router.navigate({ to: "/" });
-  }
-};
+```
+User enters credentials → signIn() → auth.service.signIn() → POST /auth/signin
+                                                          ↓
+                                                    External API validates
+                                                          ↓
+                                                    Returns JWT tokens
+                                                          ↓
+                                                Tokens stored in localStorage
+                                                          ↓
+                                                    User data updated
+                                                          ↓
+                                                    Redirect to dashboard
 ```
 
-**Process:**
-
-1. User submits registration form with email, password, and name
-2. `authClient.signUp.email()` creates user account and session
-3. Better Auth automatically handles password hashing and user creation
-4. Session is established and user is redirected
-
-### 2. Email Sign-In (`src/routes/sign-in.tsx`)
+**Implementation:**
 
 ```typescript
+// In sign-in route
+const { signIn, isSigningIn } = useAuth();
+const router = useRouter();
+
 const onSubmit = async (data: SignInForm) => {
-  await authClient.signIn.email(
-    {
-      email: data.email,
-      password: data.password,
-    },
-    {
-      onSuccess: () => {
-        router.navigate({ to: "/dashboard" });
-      },
-      onError: (error) => {
-        setAuthError(error.error.message);
-      },
-    }
-  );
+  try {
+    await signIn(data);
+    router.navigate({ to: "/dashboard" });
+  } catch (error) {
+    setAuthError(error.message);
+  }
 };
 ```
 
-**Process:**
+### 2. Sign-Up Flow
 
-1. User submits credentials
-2. Better Auth validates email/password against database
-3. Creates new session on successful authentication
-4. Session cookie is set automatically
-5. User is redirected to `/dashboard/projects`
+```
+User fills registration form → signUp() → auth.service.signUp() → POST /auth/signup
+                                                                     ↓
+                                                               External API creates user
+                                                                     ↓
+                                                               Returns JWT tokens
+                                                                     ↓
+                                                         Tokens stored in localStorage
+                                                                     ↓
+                                                           User data updated
+                                                                     ↓
+                                                         Redirect to home/dashboard
+```
 
-### 3. API Routes (`src/routes/api/auth/$.ts`)
+**Implementation:**
 
 ```typescript
-export const ServerRoute = createServerFileRoute("/api/auth/$").methods({
-  GET: ({ request }) => {
-    return auth.handler(request);
+const { signUp, isSigningUp } = useAuth();
+const router = useRouter();
+
+const onSubmit = async (data: SignUpForm) => {
+  try {
+    await signUp(data);
+    router.navigate({ to: "/dashboard" });
+  } catch (error) {
+    setAuthError(error.message);
+  }
+};
+```
+
+### 3. Sign-Out Flow
+
+```
+User clicks sign out → signOut() → auth.service.signOut() → POST /auth/signout
+                                                               ↓
+                                                     Clear localStorage tokens
+                                                               ↓
+                                                    Clear TanStack Query cache
+                                                               ↓
+                                                   Redirect to home page
+```
+
+**Implementation:**
+
+```typescript
+const { signOut } = useAuth();
+const router = useRouter();
+
+const handleSignOut = async () => {
+  await signOut();
+  router.navigate({ to: "/" });
+};
+```
+
+### 4. Token Refresh Flow
+
+```
+API request fails with 401 → Interceptor catches 401 → Call auth.service.refreshToken()
+                                                                    ↓
+                                                            POST /auth/refresh
+                                                                    ↓
+                                                             Returns new access token
+                                                                    ↓
+                                                        Store new token in localStorage
+                                                                    ↓
+                                                    Retry original request with new token
+```
+
+**Automatic Process:**
+
+The token refresh is handled automatically by the HTTP client interceptor. If a refresh fails, the user is redirected to the sign-in page.
+
+## Token Storage
+
+### Token Keys
+
+- **Access Token**: `auth_token` - Stored in localStorage
+- **Refresh Token**: `refresh_token` - Stored in localStorage
+
+### Token Lifecycle
+
+```
+Sign In/Sign Up      → Create tokens and store in localStorage
+API Requests         → Access token sent in Authorization header
+Token Expires (401)  → Use refresh token to get new access token
+Refresh Fails        → Clear tokens and redirect to sign-in
+Sign Out             → Clear tokens from localStorage
+```
+
+## Type Definitions
+
+### User Type
+
+```typescript
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image?: string;
+  role: 'super_admin' | 'admin' | 'guest';
+  status: 'active' | 'suspended';
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### Authentication Requests/Responses
+
+```typescript
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignUpRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  tokens: AuthTokens;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+```
+
+## Protected Routes
+
+### Using useAuth Hook
+
+Protected routes can check authentication status using the `useAuth` hook:
+
+```typescript
+export const Route = createFileRoute("/dashboard")({
+  component: Dashboard,
+});
+
+function Dashboard() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" />;
+  }
+
+  return <DashboardContent />;
+}
+```
+
+### Route-level Protection
+
+For route-level protection, use TanStack Router's `beforeLoad`:
+
+```typescript
+export const Route = createFileRoute("/dashboard")({
+  beforeLoad: async ({ location }) => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw redirect({
+        to: '/sign-in',
+        search: { redirect: location.href },
+      });
+    }
   },
-  POST: ({ request }) => {
-    return auth.handler(request);
-  },
+  component: Dashboard,
 });
 ```
 
-**Purpose:**
+## OAuth Integration
 
-- Catch-all route for Better Auth API endpoints
-- Handles authentication requests like `/api/auth/sign-in`, `/api/auth/sign-up`, etc.
-- Better Auth automatically generates these endpoints
-
-## Server-Side Authentication
-
-### 1. Authentication Middleware (`src/fn/middleware.ts`)
+The authentication service supports OAuth providers:
 
 ```typescript
-export const authenticatedMiddleware = createMiddleware({
-  type: "function",
-}).server(async ({ next }) => {
-  const request = getWebRequest();
+const { signIn } = useAuth();
 
-  if (!request?.headers) {
-    throw new Error("No headers");
-  }
+// Get OAuth URL
+const oauthUrl = await authService.getOAuthUrl('google');
 
-  const session = await auth.api.getSession({ headers: request.headers });
-
-  if (!session) {
-    throw new Error("No session");
-  }
-
-  return next({
-    context: { userId: session.user.id },
-  });
-});
+// Handle OAuth callback
+await authService.handleOAuthCallback(code, state);
 ```
 
-**Key Features:**
+**Supported Providers:**
+- Google
+- GitHub
+- Auth0
+- Custom OAuth providers
 
-- Validates session from request headers
-- Throws error if no valid session
-- Provides `userId` in context for authenticated operations
-- Used across all protected server functions
+## User Profile Management
 
-### 2. Protected Server Functions
-
-Example from `src/fn/songs.ts`:
-
-```typescript
-export const createSongFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      title: z.string().min(1),
-      artist: z.string().min(1),
-      // ... other fields
-    })
-  )
-  .middleware([authenticatedMiddleware])
-  .handler(async ({ data, context }) => {
-    const { userId } = context; // Available from middleware
-
-    const songData = {
-      ...data,
-      userId, // Associate song with authenticated user
-      id: crypto.randomUUID(),
-    };
-
-    return await createSong(songData);
-  });
-```
-
-**Pattern:**
-
-1. Apply `authenticatedMiddleware` to server functions
-2. Access `userId` from context
-3. Use `userId` for authorization and data association
-
-## Client-Side Authentication State
-
-### 1. Session Hook
+### Update Profile
 
 ```typescript
-import { authClient } from "~/lib/auth-client";
+import { useUpdateProfile } from '~/hooks/api';
 
-function MyComponent() {
-  const { data: session, isPending } = authClient.useSession();
+function ProfileForm() {
+  const updateProfile = useUpdateProfile();
 
-  if (isPending) return <div>Loading...</div>;
-
-  if (!session) {
-    return <div>Please sign in</div>;
-  }
-
-  return <div>Welcome {session.user.name}!</div>;
+  const handleSubmit = (bio: string) => {
+    updateProfile.mutate({ userId: user.id, bio });
+  };
 }
 ```
 
-### 2. Profile Management (`src/hooks/useProfile.ts`)
+### Update Avatar
 
 ```typescript
-export function useUpdateUserProfile() {
-  const { refetch: refetchSession } = authClient.useSession();
+import { useUpdateAvatar } from '~/hooks/api';
 
-  return useMutation({
-    mutationFn: updateUserProfileFn,
-    onSuccess: () => {
-      toast.success("Profile updated successfully");
-      refetchSession(); // Refresh session after profile update
-    },
-    onError: () => {
-      toast.error("Failed to update profile");
-    },
-  });
+function AvatarUpload() {
+  const updateAvatar = useUpdateAvatar();
+
+  const handleFileChange = (file: File) => {
+    updateAvatar.mutate({ userId: user.id, file });
+  };
 }
 ```
-
-## User Data Access (`src/data-access/users.ts`)
-
-```typescript
-export async function findUserById(id: string): Promise<User | null> {
-  const [result] = await database
-    .select()
-    .from(user)
-    .where(eq(user.id, id))
-    .limit(1);
-
-  return result || null;
-}
-
-export async function getUserPlan(userId: string): Promise<{
-  plan: SubscriptionPlan;
-  isActive: boolean;
-  expiresAt: Date | null;
-}> {
-  const userData = await findUserById(userId);
-
-  // ... plan logic
-
-  return { plan, isActive, expiresAt };
-}
-```
-
-## Authentication Utilities
-
-### 1. Session Validation
-
-- Better Auth automatically validates sessions via cookies
-- Sessions include user ID and expiration time
-- Session tokens are stored securely in database
-
-### 2. Password Security
-
-- Passwords are automatically hashed by Better Auth
-- Uses industry-standard bcrypt hashing
-- Salt rounds and security handled internally
-
-### 3. CSRF Protection
-
-- Better Auth includes CSRF protection by default
-- Validates requests using secure headers
-- Protects against cross-site request forgery
 
 ## Environment Variables
 
-Required environment variables for authentication:
+Required environment variables (see `.env.example`):
 
 ```bash
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5433/dbname"
+# External API Configuration
+VITE_API_BASE_URL="http://localhost:8000/api"
 
-# Better Auth (auto-generated)
-BETTER_AUTH_SECRET="your-secret-key"
-BETTER_AUTH_URL="http://localhost:3000"
+# External Authentication
+VITE_AUTH_PROVIDER_URL="https://your-auth-provider.com"
+VITE_AUTH_CLIENT_ID=""
+VITE_AUTH_CALLBACK_URL="http://localhost:3000/auth/callback"
+```
+
+## External API Requirements
+
+Your backend API must provide the following endpoints:
+
+### Authentication Endpoints
+
+- `POST /auth/signin` - User sign in
+- `POST /auth/signup` - User registration
+- `POST /auth/signout` - User sign out
+- `POST /auth/refresh` - Refresh access token
+- `GET /auth/me` - Get current user
+- `POST /auth/verify-email` - Verify email
+- `POST /auth/resend-verification` - Resend verification email
+- `POST /auth/reset-password` - Request password reset
+- `POST /auth/update-password` - Update password
+
+### OAuth Endpoints
+
+- `GET /auth/oauth/{provider}` - Get OAuth URL
+- `POST /auth/oauth/callback` - Handle OAuth callback
+
+### Expected Response Format
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": { ... },
+    "tokens": {
+      "accessToken": "...",
+      "refreshToken": "..."
+    }
+  },
+  "message": "Login successful"
+}
 ```
 
 ## Common Patterns
 
-### 1. Protecting Routes
+### 1. Using Authentication State
 
 ```typescript
-// In route component
-const { data: session } = authClient.useSession();
+import { useAuth } from '~/hooks/api';
 
-if (!session) {
-  return <Navigate to="/sign-in" />;
+function Header() {
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
+
+  if (isLoading) return <Skeleton />;
+  if (!isAuthenticated) return <SignInButton />;
+
+  return (
+    <div>
+      <UserAvatar name={user.name} />
+      <DropdownMenu>
+        <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
+      </DropdownMenu>
+    </div>
+  );
 }
 ```
 
-### 2. Conditional Rendering
+### 2. Displaying User Information
 
 ```typescript
-const { data: session } = authClient.useSession();
+function UserProfile() {
+  const { user } = useAuth();
 
-return (
-  <div>
-    {session ? (
-      <UserDashboard user={session.user} />
-    ) : (
-      <LoginPrompt />
-    )}
-  </div>
-);
+  return (
+    <Card>
+      <UserAvatar name={user.name} image={user.image} />
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+      <Badge>{user.role}</Badge>
+    </Card>
+  );
+}
 ```
 
-### 3. Server Function Authorization
+### 3. Handling Authentication Errors
 
 ```typescript
-export const protectedFunction = createServerFn()
-  .middleware([authenticatedMiddleware])
-  .handler(async ({ context }) => {
-    const { userId } = context;
-    // Function logic with authenticated user
-  });
+const { signIn } = useAuth();
+
+const handleSubmit = async (data: SignInForm) => {
+  try {
+    await signIn(data);
+    toast.success('Welcome back!');
+  } catch (error) {
+    if (error.message.includes('Invalid credentials')) {
+      setError('Invalid email or password');
+    } else if (error.message.includes('Account not verified')) {
+      setError('Please verify your email address');
+    } else {
+      setError('An error occurred. Please try again.');
+    }
+  }
+};
 ```
 
 ## Security Considerations
 
-1. **Session Management**: Sessions automatically expire and are securely stored
-2. **Password Hashing**: Better Auth handles secure password hashing
-3. **CSRF Protection**: Built-in protection against CSRF attacks
-4. **SQL Injection**: Drizzle ORM provides protection against SQL injection
-5. **Input Validation**: Zod schemas validate all authentication inputs
+1. **Token Storage**: Tokens stored in localStorage are accessible via JavaScript. For production, consider using httpOnly cookies (if your backend API supports them).
+
+2. **HTTPS**: Always use HTTPS in production to prevent token interception.
+
+3. **Token Expiration**: Access tokens should have a short expiration time (e.g., 15-30 minutes). Refresh tokens should have a longer expiration (e.g., 7-30 days).
+
+4. **CORS**: Ensure your backend API allows CORS from your frontend domain.
+
+5. **CSRF Protection**: Your backend API should implement CSRF protection, especially for state-changing operations.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"No session" errors**: Ensure `authenticatedMiddleware` is applied to protected functions
-2. **Authentication loops**: Check redirect logic in sign-in/sign-up flows
-3. **Session not persisting**: Verify cookie settings and database connection
-4. **Type errors**: Ensure Better Auth types are properly imported
+1. **"No token" errors**: Ensure the user is authenticated before making API requests.
+
+2. **Authentication loops**: Check redirect logic and token storage.
+
+3. **Token not refreshing**: Verify `/auth/refresh` endpoint is working correctly.
+
+4. **401 errors after refresh**: Check if the refresh token is valid and not expired.
+
+5. **Type errors**: Ensure all types are properly imported from `~/api-services/types`.
 
 ### Debug Tools
 
 ```typescript
-// Check current session server-side
-const session = await auth.api.getSession({ headers: request.headers });
-console.log("Current session:", session);
+// Check authentication status
+const { isAuthenticated, user } = useAuth();
+console.log('Is authenticated:', isAuthenticated);
+console.log('User:', user);
 
-// Check session client-side
-const { data: session } = authClient.useSession();
-console.log("Client session:", session);
+// Check stored tokens
+console.log('Access token:', localStorage.getItem('auth_token'));
+console.log('Refresh token:', localStorage.getItem('refresh_token'));
 ```
 
-## Migration and Setup
+## Migration from Better Auth
 
-When setting up authentication:
+If you're migrating from Better Auth to this external API authentication:
 
-1. Run database migrations to create auth tables
-2. Set environment variables
-3. Configure Better Auth in `src/utils/auth.ts`
-4. Set up auth client in `src/lib/auth-client.ts`
-5. Create sign-in/sign-up routes
-6. Apply middleware to protected server functions
+1. Remove Better Auth dependencies
+2. Update all components to use `useAuth()` hook instead of `authClient`
+3. Replace server-side auth checks with token-based checks
+4. Update API calls to use the new api-services layer
+5. Test authentication flows thoroughly
 
-This authentication system provides a robust, secure foundation for user management with type safety throughout the application.
+This authentication system provides a clean, secure foundation for user management with type safety throughout the application, while consuming external APIs for all backend functionality.

@@ -1,9 +1,8 @@
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
-import { nitro } from "nitro/vite";
+import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 
 export default defineConfig(({ mode }) => {
   return {
@@ -11,11 +10,14 @@ export default defineConfig(({ mode }) => {
       port: 3000,
     },
     plugins: [
+      TanStackRouterVite(),
       tsConfigPaths(),
       tailwindcss(),
-      tanstackStart(),
-      nitro(),
       viteReact(),
     ],
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+    },
   };
 });

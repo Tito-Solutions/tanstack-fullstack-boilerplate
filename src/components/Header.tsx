@@ -1,12 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { authClient } from "~/lib/auth-client";
 import { ModeToggle } from "./mode-toggle";
 import { Button, buttonVariants } from "./ui/button";
 import {
   LogOut,
-  User,
   Menu,
-  Settings,
   Code,
   LayoutDashboard,
 } from "lucide-react";
@@ -23,8 +20,9 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useState } from "react";
 import * as React from "react";
 import { cn } from "~/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
-import { userKeys } from "~/queries/users";
+import { useAuth } from '~/hooks/useAuth';
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
+
 
 const dashboardLink = {
   title: "Dashboard",
@@ -38,94 +36,31 @@ const navItems = [
     href: "/dashboard",
     icon: LayoutDashboard,
   },
-  {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
 ];
 
 export function Header() {
-  const { data: session, isPending } = authClient.useSession();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { isAuthenticated, user } = useAuthenticationStore();
+  const { logout, loading } = useAuth();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await authClient.signOut();
-    // Invalidate all user-related queries to clear cached data
-    queryClient.invalidateQueries({ queryKey: userKeys.all });
+    await logout();
     navigate({ to: "/" });
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="max-w-screen-2xl mx-auto px-8 flex h-14 items-center">
         <div className="mr-4 flex gap-16">
-          <Link to="/" className="mr-6 flex items-center space-x-2 group">
-            <div className="relative shrink-0">
-              <Code className="h-5 w-5 text-primary transition-transform group-hover:scale-110" />
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-            <span className="hidden font-semibold text-sm sm:inline-block bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
-              Product Expert AI
-            </span>
-          </Link>
 
-          {session ? (
-            <nav className="hidden md:flex items-center gap-2 text-sm">
-              <Link
-                to={dashboardLink.href}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
-                  currentPath.startsWith("/dashboard")
-                    ? "text-foreground"
-                    : "text-foreground/70 hover:text-foreground"
-                }`}
-              >
-                <LayoutDashboard
-                  className={`h-4 w-4 relative z-10 transition-transform ${
-                    currentPath.startsWith("/dashboard")
-                      ? "scale-110"
-                      : "group-hover:scale-110"
-                  }`}
-                />
-                <span className="relative z-10">{dashboardLink.title}</span>
-                <span
-                  className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                    currentPath.startsWith("/dashboard")
-                      ? "opacity-100"
-                      : "opacity-0 group-hover:opacity-100"
-                  }`}
-                ></span>
-                <span
-                  className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
-                    currentPath.startsWith("/dashboard")
-                      ? "opacity-100"
-                      : "opacity-0 group-hover:opacity-100"
-                  }`}
-                ></span>
-              </Link>
-            </nav>
-          ) : (
-            <nav className="hidden md:flex items-center gap-2 text-sm">
-              <Link
-                to="/"
-                onClick={() => {}}
-                className="relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group text-foreground/70 hover:text-foreground"
-              >
-                <span className="relative z-10">-</span>
-                <span className="absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 opacity-0 group-hover:opacity-100"></span>
-                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 opacity-0 group-hover:opacity-100"></span>
-              </Link>
-            </nav>
-          )}
         </div>
 
         {/* Mobile menu */}
-        {session && (
+        {/* {isAuthenticated && (
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -147,7 +82,7 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Code className="h-6 w-6 text-primary shrink-0" />
-                  <span className="font-semibold text-base bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
+                  <span className="font-semibold text-base bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent whitespace-nowrap leading-none">
                     Product Expert AI
                   </span>
                 </Link>
@@ -185,15 +120,15 @@ export function Header() {
               </div>
             </SheetContent>
           </Sheet>
-        )}
+        )} */}
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none"></div>
           <nav className="flex items-center gap-4">
-            {isPending ? (
+            {loading ? (
               <div className="flex h-9 w-9 items-center justify-center">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
-            ) : session ? (
+            ) : isAuthenticated ? (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -201,10 +136,10 @@ export function Header() {
                       variant="ghost"
                       className="relative h-8 w-8 rounded-full"
                     >
-                      <UserAvatar
-                        imageKey={session?.user?.image || null}
-                        name={session?.user?.name || null}
-                        email={session?.user?.email || null}
+                  <UserAvatar
+                        imageUrl={(user as any)?.image_url || null}
+                        name={user?.name || null}
+                        email={user?.email || null}
                         size="sm"
                       />
                     </Button>
@@ -216,27 +151,11 @@ export function Header() {
                           Account
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {session.user.email}
+                          {user?.email || ""}
                         </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/profile/$userId"
-                        params={{ userId: session.user.id }}
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
@@ -248,8 +167,7 @@ export function Header() {
               <>
                 <Link
                   className={buttonVariants({ variant: "default" })}
-                  to="/sign-in"
-                  search={{ redirect: undefined }}
+                  to="/auth/signin"
                 >
                   Sign In
                 </Link>
