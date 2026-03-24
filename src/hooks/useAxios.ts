@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthenticationStore } from '~/store/useAuthenticationStore'
 import { toast } from 'sonner'
+import { TokenUtils } from '~/api-services/token.utils'
 
 interface UseAxiosReturn {
   $http: AxiosInstance
@@ -29,26 +30,31 @@ export const useAxios = (): UseAxiosReturn => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
 
-        try {
-          const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
-          const refreshResponse = await axios.post(`${baseURL}/auth/refresh`, {
-            refreshToken: authStore.refreshToken
-          },{
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              Authorization: `Bearer ${authStore.accessToken}`
+        // Only refresh if token is about to expire (within 5 minutes)
+        if (TokenUtils.willExpireSoon(token, 5)) {
+          try {
+            const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+            const refreshResponse = await axios.post(`${baseURL}/auth/refresh`, {
+              refreshToken: authStore.refreshToken
+            }, {
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                Authorization: `Bearer ${authStore.accessToken}`
+              }
+            })
+
+            const { accessToken, refreshToken } = refreshResponse.data || {}
+
+            if (accessToken && refreshToken) {
+              authStore.setTokens(accessToken, refreshToken)
+              // Update the Authorization header with new token
+              config.headers.Authorization = `Bearer ${accessToken}`
             }
-          })
-  
-          const { accessToken, refreshToken } = refreshResponse.data || {}
-  
-          if (accessToken && refreshToken) {
-            authStore.setTokens(accessToken, refreshToken)
+          } catch (refreshError: any) {
+            // If refresh fails, fall through to logout handling below
+            console.log('Refresh token request failed:', refreshError?.response || refreshError)
           }
-        } catch (refreshError: any) {
-          // If refresh fails, fall through to logout handling below
-          console.log('Refresh token request failed:', refreshError?.response || refreshError)
         }
       }
 
