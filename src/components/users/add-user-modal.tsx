@@ -27,14 +27,14 @@ import {
 import { TextField } from "~/components/ui/TextField";
 import { useCreateUser } from "~/hooks/api/use-create-user";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   firstName: z.string().min(2, "Required field"),
   lastName: z.string().min(2, "Required field"),
   email: z.email("Invalid email address").min(2, "Required field"),
   roles: z.enum(["admin", "manager", "user"]),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 interface AddUserModalProps {
   onSuccess?: () => void;

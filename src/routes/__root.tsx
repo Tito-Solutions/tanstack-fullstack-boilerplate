@@ -8,6 +8,9 @@ import {
 import * as React from "react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TamboProvider } from "@tambo-ai/react";
+import { components } from "~/lib/tambo";
+import { MessageThreadCollapsible } from "~/components/ui/message-thread-collapsible";
 import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
@@ -15,7 +18,9 @@ import { seo } from "~/utils/seo";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import NProgress from "nprogress";
+import { useAuthenticationStore } from "~/store/useAuthenticationStore";
 import "nprogress/nprogress.css";
+import { tools } from "~/lib/tambo.tools";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -82,6 +87,7 @@ function RootComponent() {
 function RootDocument({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const prevPathnameRef = React.useRef("");
+  const authStore = useAuthenticationStore();
 
   React.useEffect(() => {
     const currentPathname = routerState.location.pathname;
@@ -97,18 +103,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     }
   }, [routerState.status, routerState.location.pathname]);
 
+  const randomUserKey = Math.random().toString(36).substring(2, 15);
+
   return (
     <>
       <HeadContent />
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <div className="min-h-screen bg-background">
-          {/* <Header /> */}
-          <main>{children}</main>
-          {/* <Footer /> */}
-        </div>
-        <TanStackRouterDevtools position="bottom-right" />
-        <ReactQueryDevtools buttonPosition="bottom-left" />
-        <Toaster />
+        <TamboProvider
+          apiKey={import.meta.env.VITE_TAMBO_API_KEY ?? ""}
+          components={components}
+          userKey={authStore.user.id ?? randomUserKey}
+          tools={tools}
+        >
+          <div className="min-h-screen bg-background">
+            {/* <Header /> */}
+            <main>{children}</main>
+            {/* <Footer /> */}
+          </div>
+          <MessageThreadCollapsible />
+          <TanStackRouterDevtools position="bottom-right" />
+          <ReactQueryDevtools buttonPosition="bottom-left" />
+          <Toaster />
+        </TamboProvider>
       </ThemeProvider>
     </>
   );

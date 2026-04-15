@@ -18,7 +18,7 @@ interface DataTableWithSearchProps<T> {
   debounceMs?: number;
 }
 
-export function DataTableWithSearch<T>({
+export function DataTableWithSearch<T extends Record<string, any>>({
   searchValue,
   title,
   onSearchChange,
