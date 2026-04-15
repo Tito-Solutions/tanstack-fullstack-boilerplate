@@ -25,10 +25,10 @@ export function useUsersTable() {
   );
 
   return {
-    data: result.data?.users || [],
+    data: result.data?.data || [],
     tableState: result.tableState,
-    totalPages: result.data?.pagination?.totalPages || 0,
-    total: result.data?.pagination?.total || 0,
+    totalPages: result.data?.totalPages || 0,
+    total: result.data?.total || 0,
     loading: result.isLoading,
     error: result.error,
     setPage: result.setPage,

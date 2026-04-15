@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { RefreshCw } from 'lucide-react';
 import type { ColumnDef } from '~/api-services/types';
 
-interface DataTableContainerProps<T> {
+interface DataTableContainerProps<T extends Record<string, any>> {
   queryKey: string[];
   fetchFn: (state: any) => Promise<any>;
   columns: ColumnDef<T>[];
@@ -31,7 +31,7 @@ interface DataTableContainerProps<T> {
   setSearch: (search: string) => void;
 }
 
-export function DataTableContainer<T>({
+export function DataTableContainer<T extends Record<string, any>>({
   fetchFn,
   columns,
   title,

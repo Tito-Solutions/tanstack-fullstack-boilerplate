@@ -381,7 +381,7 @@ export function WebAnalytics({
                   }}
                   labelStyle={{ color: "var(--foreground)" }}
                   itemStyle={{ color: "var(--foreground)" }}
-                  formatter={(value: number | undefined) => [value ?? 0, "Total Route Usage"]}
+                  formatter={(value: any, name: any) => [typeof value === 'number' ? value : 0, "Total Route Usage"]}
                 />
                 <Area
                   type="monotone"

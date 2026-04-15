@@ -95,7 +95,7 @@ function AnalyticsChart({ data, metric }: AnalyticsChartProps) {
               color: '#f9fafb',
             }}
             labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
-            formatter={(value: number) => [value.toLocaleString(), metric === "visitors" ? "Visitors" : "Page Views"]}
+            formatter={(value: any, name: any) => [typeof value === 'number' ? value.toLocaleString() : '0', metric === "visitors" ? "Visitors" : "Page Views"]}
           />
           <Area
             type="monotone"

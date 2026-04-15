@@ -3,14 +3,16 @@ import type { User, PaginatedResponse } from '~/api-services/types';
 export const generateDummyUsers = (page: number, limit: number, search?: string): PaginatedResponse<User> => {
   const allUsers: User[] = Array.from({ length: 125 }, (_, i) => {
     const id = i;
+    const roles = ['super_admin', 'admin', 'manager', 'user'][Math.floor(Math.random() * 4)] as User['roles'];
     return {
       id: `user-${id}`,
       firstName: `First${id}`,
       lastName: `Last${id}`,
       email: `user${id}@example.com`,
       emailVerified: Math.random() > 0.3,
-      role: ['super_admin', 'admin', 'guest'][Math.floor(Math.random() * 3)] as User['role'],
+      roles,
       status: ['active', 'suspended'][Math.floor(Math.random() * 2)] as User['status'],
+      isActive: true,
       createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date().toISOString(),
     };
