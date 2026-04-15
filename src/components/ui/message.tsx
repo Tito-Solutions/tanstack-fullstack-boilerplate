@@ -3,13 +3,23 @@
 import { TamboThreadMessage, TamboToolUseContent } from "@tambo-ai/react";
 import {
   Message as MessageBase,
-  type MessageContentProps as MessageBaseContentProps,
-  type MessageContentState,
-  type MessageImagesProps as MessageBaseImagesProps,
-  type MessageRenderedComponentProps as MessageBaseRenderedComponentProps,
-  type MessageLoadingIndicatorProps,
-  type MessageRootProps,
 } from "@tambo-ai/react-ui-base/message";
+import type {
+  MessageContentProps as MessageBaseContentProps,
+  MessageContentState,
+  MessageImagesProps as MessageBaseImagesProps,
+  MessageRenderedComponentProps as MessageBaseRenderedComponentProps,
+  MessageLoadingIndicatorProps,
+} from "@tambo-ai/react-ui-base/message";
+
+// Define our own interface with proper HTML props
+interface MessageRootProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+  children?: React.ReactNode;
+  message?: TamboThreadMessage;
+  role?: 'user' | 'assistant' | 'system';
+  isLoading?: boolean;
+}
 import {
   ReasoningInfo as ReasoningInfoBase,
   type ReasoningInfoRootProps,
@@ -83,7 +93,7 @@ const Message = React.forwardRef<HTMLDivElement, MessageProps>(
           "data-[message-role=assistant]:w-full",
           className,
         )}
-        message={message}
+        message={message as any}
         role={role}
         {...props}
       >

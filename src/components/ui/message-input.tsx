@@ -38,7 +38,6 @@ import {
   MessageInput as MessageInputBase,
   type PromptProvider,
   type ResourceProvider,
-  type StagedImageRenderProps,
 } from "@tambo-ai/react-ui-base/message-input";
 
 // Lazy load DictationButton for code splitting (framework-agnostic alternative to next/dynamic)
@@ -273,7 +272,6 @@ const MessageInputTextarea = ({
       promptFormatOptions={promptFormatOptions}
       className={cn("flex-1", className)}
       data-slot="message-input-textarea"
-      {...props}
       render={(textareaProps, state) => {
         const handleAddImage = async (file: File) => {
           if (state.images.length + pendingImagesRef.current >= MAX_IMAGES) {
@@ -290,8 +288,12 @@ const MessageInputTextarea = ({
           }
         };
 
+        // Extract div-specific props to avoid type errors
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { onCopy, onCut, onPaste, ...divProps } = textareaProps as any;
+
         return (
-          <div {...textareaProps}>
+          <div suppressHydrationWarning {...divProps}>
             <McpPromptEffect
               selectedMcpPromptName={selectedMcpPromptName}
               selectedMcpPromptData={selectedMcpPromptData}
@@ -779,7 +781,7 @@ MessageInputMcpResourceButton.displayName = "MessageInput.McpResourceButton";
  * Shows a compact badge with icon and name by default, expands to show image preview on click.
  *
  * @component
- * @example
+ *   @example
  * ```tsx
  * <ImageContextBadge
  *   image={stagedImage}
@@ -790,6 +792,17 @@ MessageInputMcpResourceButton.displayName = "MessageInput.McpResourceButton";
  * />
  * ```
  */
+interface StagedImageRenderProps {
+  image: {
+    id: string;
+    dataUrl: string;
+  };
+  displayName: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onRemove: () => void;
+}
+
 const ImageContextBadge: React.FC<StagedImageRenderProps> = ({
   image,
   displayName,

@@ -68,7 +68,7 @@ export function WebAnalyticsChartCard({ data }: WebAnalyticsChartCardProps) {
                 }}
                 labelStyle={{ color: "var(--foreground)" }}
                 itemStyle={{ color: "var(--foreground)" }}
-                formatter={(value: number | undefined) => [value ?? 0, "Total Route Usage"]}
+                  formatter={(value: any) => [typeof value === 'number' ? value : 0, "Total Route Usage"]}
               />
               <Area
                 type="monotone"
