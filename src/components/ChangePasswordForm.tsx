@@ -5,6 +5,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAxios } from "~/hooks/useAxios";
 import { toast } from "sonner";
 import { useLoader } from "~/store/useLoader";
+import { z } from "zod";
+
+export const ChangePasswordFormSchema = z.object({
+  currentPassword: z.string().optional(),
+  newPassword: z.string().optional(),
+  confirmNewPassword: z.string().optional(),
+})
+
+export type ChangePasswordForm = z.infer<typeof ChangePasswordFormSchema>;
 
 interface PasswordForm {
   currentPassword: string | null;
@@ -120,7 +129,9 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     try {
       start();
       const { data } = await $http.patch('/users/change-password', passwordForm);
-      
+      toast.success('Password updated successfully', {
+        position: 'top-right',
+      });
       // Reset form
       setPasswordForm({
         currentPassword: null,
