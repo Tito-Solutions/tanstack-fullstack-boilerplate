@@ -1,5 +1,6 @@
 import { DataTableContainer } from '~/components/data-table-container';
 import { useUsersTable } from '~/hooks/api/use-users-table';
+import { useDeleteUser } from '~/hooks/api/use-delete-user';
 import type { ColumnDef, User } from '~/api-services/types';
 import { Badge } from '../ui/badge';
 import { TableActions } from '~/components/ui/table-actions';
@@ -30,6 +31,7 @@ const getStatusBadgeVariant = (status: boolean | undefined) => {
 
 export function UserTable() {
   const { toast } = useToast();
+  const { deleteUser, isDeleting } = useDeleteUser();
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: User | null }>({
     open: false,
     user: null,
@@ -73,15 +75,13 @@ export function UserTable() {
 
   const confirmDeleteUser = useCallback(() => {
     if (deleteDialog.user) {
-      toast({
-        title: 'User Deleted',
-        description: `User ${deleteDialog.user.firstName} ${deleteDialog.user.lastName} has been deleted.`,
-        variant: 'destructive',
+      deleteUser(deleteDialog.user.id, {
+        onSuccess: () => {
+          setDeleteDialog({ open: false, user: null });
+        },
       });
-      console.log('Delete user:', deleteDialog.user);
-      setDeleteDialog({ open: false, user: null });
     }
-  }, [deleteDialog.user, toast]);
+  }, [deleteDialog.user, deleteUser]);
 
   const userColumns: ColumnDef<User>[] = [
     {
@@ -138,9 +138,7 @@ export function UserTable() {
       render: (value, item) => (
         <TableActions
           item={item}
-          onEdit={handleEditUser}
           onDelete={handleDeleteUser}
-          onView={handleViewUser}
           compact={true}
         />
       ),
@@ -175,6 +173,7 @@ export function UserTable() {
         cancelLabel="Cancel"
         onConfirm={confirmDeleteUser}
         variant="destructive"
+        isLoading={isDeleting}
       />
     </>
   );
